@@ -1,29 +1,22 @@
-@file:OptIn(ExperimentalAnimationApi::class) // Opt-in at file level
-
 package ui
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi // Import for OptIn
+import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.with // For the 'with' infix function in transitionSpec
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,221 +24,169 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.kalyani.appetito.R
 
-@Preview(showBackground = true)
+// Data classes for our items
+data class FavoriteFood(val name: String, val description: String, val price: Float, val rating: Float, val reviews: Int, val imageRes: Int)
+data class FavoriteRestaurant(val name: String, val categories: String, val deliveryTime: String, val imageRes: Int)
+
+// Sample data providers
+fun sampleFavoriteFoods() = listOf(
+    FavoriteFood("Chicken Hawaiian", "Chicken, Cheese and pineapple", 9.20f, 4.5f, 25, R.drawable.chicken_hawaiian),
+    FavoriteFood("Red N Hot Pizza", "Chicken, Chili", 10.35f, 4.5f, 75, R.drawable.pizza_3),
+    FavoriteFood("Veggie Supreme", "Bell peppers, olives, mushrooms", 11.25f, 4.4f, 29, R.drawable.pizza_4)
+)
+fun sampleFavoriteRestaurants() = listOf(
+    FavoriteRestaurant("McDonald's", "Burger • Chicken • Fast Food", "10-15 mins", R.drawable.mcdonalds_img),
+    FavoriteRestaurant("Starbucks", "Coffee • Bakery • Drinks", "5-10 mins", R.drawable.starbucks_img)
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesFoodItemsScreen() {
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableStateOf(0) }
     val favoriteFoods = remember { sampleFavoriteFoods() }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // ... (Top bar code) ...
-        IconButton(onClick = { /* TODO: Back navigation */ }) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_back),
-                contentDescription = "Back",
-                tint = Color(0xFF111719)
-            )
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = "Favorites",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF111719),
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+    val favoriteRestaurants = remember { sampleFavoriteRestaurants() }
 
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(22.dp))
-        // Tabs
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 22.dp)
-                .height(55.dp)
-                .clip(RoundedCornerShape(27.5.dp))
-                .background(Color(0xFFF2EAEA)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // THESE CALLS (lines 72 and 78 in your error list) WILL BE FIXED
-            // ONCE THE TabButton DEFINITION CONFLICT IS RESOLVED
-            TabButton(
-                text = "Food Items",
-                selected = selectedTab == 0,
-                onClick = { selectedTab = 0 },
-                modifier = Modifier.weight(1f)
-            )
-            TabButton(
-                text = "Restaurants", // Corrected typo
-                selected = selectedTab == 1,
-                onClick = { selectedTab = 1 },
-                modifier = Modifier.weight(1f)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
+    var isContentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isContentVisible = true }
 
-        AnimatedContent(
-            targetState = selectedTab,
-            transitionSpec = {
-                fadeIn(animationSpec = tween<Float>(durationMillis = 300)) with
-                        fadeOut(animationSpec = tween<Float>(durationMillis = 300))
-            },
-            label = "TabContentAnimation"
-        ) { tab ->
-            if (tab == 0) {
-                Column {
-                    favoriteFoods.forEach { food ->
-                        AnimatedVisibility( // This is line 92 in your error list
-                            visible = true,
-                            enter = fadeIn(animationSpec = tween<Float>(durationMillis = 400)),
-                            exit = fadeOut(animationSpec = tween<Float>(durationMillis = 200)),
-                        ) {
-                            FavoriteFoodCard(food)
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Favorites", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                        Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+            )
+        },
+        containerColor = Color(0xFFF5F5F5) // Light gray background
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding)) {
+            // Custom TabRow for switching between Food Items and Restaurants
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                containerColor = Color.White,
+                indicator = { tabPositions ->
+                    TabRowDefaults.Indicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = Color(0xFFFE724C)
+                    )
                 }
-            } else {
-                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text("No favorite restaurants yet.", color = Color(0xFF9796A1))
+            ) {
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("Food Items", color = if (selectedTabIndex == 0) Color(0xFFFE724C) else Color.Gray) }
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("Restaurants", color = if (selectedTabIndex == 1) Color(0xFFFE724C) else Color.Gray) }
+                )
+            }
+
+            // AnimatedContent smoothly switches between the two lists
+            AnimatedContent(
+                targetState = selectedTabIndex,
+                transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                label = "FavoritesTabAnimation"
+            ) { tabIndex ->
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (tabIndex == 0) {
+                        itemsIndexed(favoriteFoods) { index, food ->
+                            AnimatedVisibility(
+                                visible = isContentVisible,
+                                enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
+                            ) {
+                                FavoriteFoodCard(food)
+                            }
+                        }
+                    } else {
+                        itemsIndexed(favoriteRestaurants) { index, restaurant ->
+                            AnimatedVisibility(
+                                visible = isContentVisible,
+                                enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
+                            ) {
+                                FavoriteRestaurantCard(restaurant)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-// MAKE SURE THIS TabButton DEFINITION (around line 123 in your error list)
-// IS THE *ONLY* ONE IN THIS FILE AND NOT CONFLICTING WITH AN IMPORTED ONE.
-@Composable
-fun TabButton(text: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(23.5.dp),
-        colors = if (selected) ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
-        else ButtonDefaults.buttonColors(containerColor = Color.Transparent, contentColor = Color(0xFFFE724C)),
-        modifier = modifier
-            .height(47.dp)
-            .padding(horizontal = 4.dp)
-    ) {
-        Text(
-            text = text,
-            color = if (selected) Color.White else Color(0xFFFE724C),
-            fontSize = 14.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
-        )
-    }
-}
-
-
-data class FavoriteFood(
-    val name: String,
-    val description: String,
-    val price: Float,
-    val rating: Float,
-    val reviews: Int,
-    val imageRes: Int
-)
 
 @Composable
 fun FavoriteFoodCard(food: FavoriteFood) {
-    Box(
-        modifier = Modifier
-            .padding(horizontal = 22.dp)
-            .fillMaxWidth()
-            // .background(Color.White) // Shadow works best if the surface has a color
-            .shadow( // shadow modifier should now resolve
-                elevation = 4.dp, // Reduced elevation for a softer look
-                shape = RoundedCornerShape(18.dp),
-                clip = false // Allow shadow to extend beyond bounds before clipping by parent
-            )
-            .clip(RoundedCornerShape(18.dp)) // Clip content after shadow
-            .background(Color.White) // Apply background after shadow and clipping of content
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth().clickable { /* TODO: Navigate to food details */ }
     ) {
         Column {
             Image(
-                painter = painterResource(id = food.imageRes), // R.drawable should resolve
-                contentDescription = food.name, // Better content description
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(165.dp)
-                    .clip(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp)) // Clip only top if content flows out
+                painter = painterResource(id = food.imageRes),
+                contentDescription = food.name,
+                // FIX: ContentScale.Crop fills the space without distorting the image
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(160.dp)
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = food.name,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp)
-            )
-            Text(
-                text = food.description,
-                fontSize = 14.sp,
-                color = Color(0xFF5B5B5E),
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 8.dp)
-            )
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 12.dp) // Added end padding
-            ) {
-                Text(
-                    text = "$${String.format("%.2f", food.price)}",
-                    fontSize = 18.sp,
-                    color = Color(0xFFFE724C),
-                    fontWeight = FontWeight.SemiBold
-                )
-                Spacer(modifier = Modifier.weight(1f)) // Push ratings to the end
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_star), // R.drawable should resolve
-                    contentDescription = "Star rating",
-                    tint = Color(0xFFFFC529),
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = food.rating.toString(),
-                    fontSize = 12.sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-                Text(
-                    text = "(${food.reviews}+)",
-                    fontSize = 9.sp,
-                    color = Color(0xFF9796A1),
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(food.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(food.description, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("$${String.format("%.2f", food.price)}", fontSize = 20.sp, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(painter = painterResource(id = R.drawable.ic_star), contentDescription = "Rating", tint = Color(0xFFFFC529), modifier = Modifier.size(16.dp))
+                    Text(food.rating.toString(), fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
+                    Text(" (${food.reviews}+)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(start = 4.dp))
+                }
             }
         }
     }
 }
 
-fun sampleFavoriteFoods() = listOf(
-    FavoriteFood(
-        name = "Chicken Hawaiian",
-        description = "Chicken, Cheese and pineapple",
-        price = 9.20f,
-        rating = 4.5f,
-        reviews = 25,
-        imageRes = R.drawable.chicken_hawaiian // R.drawable should resolve
-    ),
-    FavoriteFood(
-        name = "Red N Hot Pizza",
-        description = "Chicken, Chili",
-        price = 10.35f,
-        rating = 4.5f,
-        reviews = 25,
-        imageRes = R.drawable.chicken_hawaiian // R.drawable should resolve
-    ),
-    FavoriteFood(
-        name = "Chicken Hawaiian", // Note: Duplicate name, consider unique keys if used in Lazy lists
-        description = "Chicken, Cheese and pineapple",
-        price = 8.28f,
-        rating = 4.5f,
-        reviews = 25,
-        imageRes = R.drawable.chicken_hawaiian // R.drawable should resolve
-    )
-)
+@Composable
+fun FavoriteRestaurantCard(restaurant: FavoriteRestaurant) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth().clickable { /* TODO: Navigate to restaurant details */ }
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(id = restaurant.imageRes),
+                contentDescription = restaurant.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp))
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(restaurant.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(restaurant.categories, fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(restaurant.deliveryTime, fontSize = 14.sp, color = Color.Gray)
+            }
+        }
+    }
+}
 
+
+@Preview(showBackground = true)
+@Composable
+fun FavoritesFoodItemsScreenPreview() {
+    FavoritesFoodItemsScreen()
+}

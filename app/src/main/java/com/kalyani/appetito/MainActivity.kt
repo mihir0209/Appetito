@@ -40,10 +40,14 @@ fun AppetitoApp() {
         composable("reset_password") { ResetPasswordScreen(onSendNewPassword = { navController.popBackStack() }) }
         composable("main_app") { MainWithBottomNav(mainNavController = navController) }
         composable("orders") { MyOrdersUpcomingScreen() }
-        composable("add_address") { AddNewAddressScreen() }
+        composable("add_address") { AddNewAddressScreen(navController = navController) }
         composable("reviews") { ReviewsScreen() }
         composable("review_restaurant") { ReviewRestaurantScreen() }
         composable("rating") { RatingScreen() }
+        composable("payment_methods") { PaymentMethodsScreen() }
+        composable("contact_us") { ContactUsScreen() }
+        composable("settings") { SettingsScreen() }
+        composable("help") { HelpsFaqsScreen() }
 
         // THE FINAL FIX IS HERE:
         composable("food_details/{itemId}") { backStackEntry ->

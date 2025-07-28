@@ -1,38 +1,35 @@
 package ui
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
+import kotlinx.coroutines.delay
 
-private data class FoodItemDetails(
-    val id: String,
-    val name: String,
-    val description: String,
-    val price: Float,
-    val imageRes: Int,
-    val rating: Float,
-    val reviewCount: Int
-)
-
+// Data classes and data provider function remain the same
+private data class FoodItemDetails(val id: String, val name: String, val description: String, val price: Float, val imageRes: Int, val rating: Float, val reviewCount: Int)
 private fun getFoodDetailsById(itemId: String?): FoodItemDetails {
     return when (itemId) {
         "cheese_burger" -> FoodItemDetails("cheese_burger", "Cheese Burger", "A classic cheese burger with a juicy beef patty, fresh lettuce, tomatoes, and our secret sauce.", 9.50f, R.drawable.img_burger, 4.8f, 102)
@@ -42,9 +39,9 @@ private fun getFoodDetailsById(itemId: String?): FoodItemDetails {
         else -> FoodItemDetails("default", "Ground Beef Tacos", "Brown the beef better. Lean ground beef – I like to use 85% lean angus. Garlic – use fresh chopped. Spices – chili powder, cumin, onion powder.", 9.50f, R.drawable.chicken_hawaiian, 4.5f, 35)
     }
 }
-
 data class AddOn(val name: String, val price: Float)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodDetailsScreen(
     itemId: String?,
@@ -52,58 +49,192 @@ fun FoodDetailsScreen(
 ) {
     val foodItem = remember(itemId) { getFoodDetailsById(itemId) }
     var quantity by remember { mutableStateOf(1) }
-    val addOns = listOf(
-        AddOn("Pepper Julienned", 2.30f),
-        AddOn("Baby Spinach", 4.70f),
-        AddOn("Masroom", 2.50f)
-    )
+    val addOns = remember { listOf(AddOn("Pepper Julienned", 2.30f), AddOn("Baby Spinach", 4.70f), AddOn("Masroom", 2.50f)) }
+    var selectedAddOns by remember { mutableStateOf(setOf<AddOn>()) }
+    var isAddedToCart by remember { mutableStateOf(false) }
+    var isContentVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isContentVisible = true }
 
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        Box(modifier = Modifier.height(270.dp).fillMaxWidth()) {
-            Image(painter = painterResource(id = foodItem.imageRes), contentDescription = foodItem.name, modifier = Modifier.fillMaxSize())
-            IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(48.dp).align(Alignment.TopStart).padding(8.dp).background(Color.White, shape = CircleShape)) {
-                Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back", tint = Color(0xFF111719))
-            }
-            IconButton(onClick = { /* TODO */ }, modifier = Modifier.size(48.dp).align(Alignment.TopEnd).padding(8.dp).background(Color(0xFFFE724C), shape = CircleShape)) {
-                Icon(painter = painterResource(id = R.drawable.ic_favorite), contentDescription = "Favorite", tint = Color.White)
+    // THE FIX: This effect will run whenever quantity or selectedAddOns changes.
+    LaunchedEffect(quantity, selectedAddOns) {
+        // If the button is already in the "Added!" state, reset it
+        // because the user has changed their order.
+        if (isAddedToCart) {
+            isAddedToCart = false
+        }
+    }
+
+    Scaffold(
+        topBar = { /* ... */ },
+        bottomBar = {
+            AddToCartBar(
+                foodItem = foodItem,
+                quantity = quantity,
+                selectedAddOns = selectedAddOns,
+                isAddedToCart = isAddedToCart,
+                onAddToCart = { isAddedToCart = true }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Image(
+                painter = painterResource(id = foodItem.imageRes),
+                contentDescription = foodItem.name,
+                modifier = Modifier.fillMaxWidth().height(250.dp),
+                contentScale = ContentScale.Crop
+            )
+
+            AnimatedVisibility(
+                visible = isContentVisible,
+                enter = fadeIn(tween(500, 200)) + slideInVertically(tween(500, 200), initialOffsetY = { it / 2 })
+            ) {
+                Column {
+                    FoodItemHeader(foodItem = foodItem, quantity = quantity, onQuantityChange = { newQuantity -> quantity = newQuantity })
+
+                    Text(text = foodItem.description, color = Color.Gray, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+
+                    Text(text = "Choice of Add On", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color.Black, modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp))
+
+                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        addOns.forEach { addOn ->
+                            AddOnRow(
+                                addOn = addOn,
+                                isSelected = addOn in selectedAddOns,
+                                onSelect = {
+                                    selectedAddOns = if (it) {
+                                        selectedAddOns + addOn
+                                    } else {
+                                        selectedAddOns - addOn
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(24.dp)) // Add space at the bottom before the checkout bar
+                }
             }
         }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = foodItem.name, fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF323643), modifier = Modifier.padding(horizontal = 22.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp)) {
-            Icon(painter = painterResource(id = R.drawable.ic_star), contentDescription = null, tint = Color(0xFFFFC529), modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("${foodItem.rating}", fontWeight = FontWeight.SemiBold, color = Color(0xFF111719), fontSize = 14.sp)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text("(${foodItem.reviewCount}+)", color = Color(0xFF9796A1), fontSize = 14.sp)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = "See Review", color = Color(0xFFFE724C), fontSize = 13.sp, modifier = Modifier.clickable { /* TODO */ }, textDecoration = TextDecoration.Underline)
-        }
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 22.dp)) {
-            Text(text = "$${String.format("%.2f", foodItem.price)}", color = Color(0xFFFE724C), fontSize = 31.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(modifier = Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                OutlinedButton(onClick = { if (quantity > 1) quantity-- }, shape = CircleShape, border = BorderStroke(1.dp, Color(0xFFFE724C)), contentPadding = PaddingValues(0.dp), modifier = Modifier.size(32.dp)) { Icon(painter = painterResource(id = R.drawable.ic_minus), contentDescription = "Decrease", tint = Color(0xFFFE724C)) }
-                Text(text = quantity.toString().padStart(2, '0'), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(horizontal = 8.dp))
-                Button(onClick = { quantity++ }, shape = CircleShape, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)), contentPadding = PaddingValues(0.dp), modifier = Modifier.size(32.dp)) { Icon(painter = painterResource(id = R.drawable.ic_plus), contentDescription = "Increase", tint = Color.White) }
-            }
-        }
-        Text(text = foodItem.description, color = Color(0xFF858992), fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 22.dp, vertical = 8.dp))
-        Text(text = "Choice of Add On", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color(0xFF323643), modifier = Modifier.padding(start = 22.dp, top = 8.dp, bottom = 4.dp))
-        Column(modifier = Modifier.padding(horizontal = 22.dp)) { addOns.forEach { addOn -> AddOnRow(addOn) } }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /* TODO */ }, shape = RoundedCornerShape(26.5.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)), modifier = Modifier.align(Alignment.CenterHorizontally).width(167.dp).height(53.dp)) { Text("Add to cart", color = Color.White, fontSize = 15.sp) }
     }
 }
 
 @Composable
-fun AddOnRow(addOn: AddOn) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
-        Image(painter = painterResource(id = R.drawable.profile_photo), contentDescription = null, modifier = Modifier.size(48.dp).clip(CircleShape).background(Color(0xFFEFEFEF)))
+private fun FoodItemHeader(foodItem: FoodItemDetails, quantity: Int, onQuantityChange: (Int) -> Unit) {
+    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(text = foodItem.name, fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(painter = painterResource(id = R.drawable.ic_star), contentDescription = null, tint = Color(0xFFFFC529), modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("${foodItem.rating}", fontWeight = FontWeight.SemiBold, color = Color.Black, fontSize = 14.sp)
+            Text(" (${foodItem.reviewCount}+ Reviews)", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(start = 4.dp))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "$${String.format("%.2f", foodItem.price)}", color = Color(0xFFFE724C), fontSize = 28.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.weight(1f))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = { if (quantity > 1) onQuantityChange(quantity - 1) }, shape = CircleShape, border = BorderStroke(1.dp, Color.LightGray), contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) {
+                    Icon(painter = painterResource(id = R.drawable.ic_minus), contentDescription = "Decrease", tint = Color.Black)
+                }
+                Text(text = quantity.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Button(onClick = { onQuantityChange(quantity + 1) }, shape = CircleShape, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)), contentPadding = PaddingValues(0.dp), modifier = Modifier.size(36.dp)) {
+                    Icon(painter = painterResource(id = R.drawable.ic_plus), contentDescription = "Increase", tint = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AddOnRow(addOn: AddOn, isSelected: Boolean, onSelect: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+    ) {
+        Image(painter = painterResource(id = R.drawable.food_placeholder), contentDescription = null, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)))
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = addOn.name, fontSize = 14.sp, color = Color.Black, modifier = Modifier.weight(1f))
-        Text(text = "+$${String.format("%.2f", addOn.price)}", fontSize = 14.sp, color = Color.Black, modifier = Modifier.padding(end = 8.dp))
-        OutlinedButton(onClick = { /* TODO */ }, shape = CircleShape, border = BorderStroke(1.dp, Color(0xFFFE724C)), contentPadding = PaddingValues(0.dp), modifier = Modifier.size(28.dp)) { Icon(painter = painterResource(id = R.drawable.ic_addon), contentDescription = "Select AddOn", tint = Color(0xFFFE724C)) }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = addOn.name, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.SemiBold)
+            Text(text = "+ $${String.format("%.2f", addOn.price)}", fontSize = 14.sp, color = Color.Gray)
+        }
+        Checkbox(
+            checked = isSelected,
+            onCheckedChange = onSelect,
+            colors = CheckboxDefaults.colors(
+                checkedColor = Color(0xFFFE724C),
+                uncheckedColor = Color.LightGray
+            )
+        )
+    }
+}
+
+@Composable
+private fun AddToCartBar(
+    foodItem: FoodItemDetails,
+    quantity: Int,
+    selectedAddOns: Set<AddOn>,
+    isAddedToCart: Boolean,
+    onAddToCart: () -> Unit
+) {
+    val totalAddOnPrice = selectedAddOns.sumOf { it.price.toDouble() }.toFloat()
+    val totalPrice = (foodItem.price + totalAddOnPrice) * quantity
+
+    // Use LaunchedEffect to reset the button state after a delay
+    LaunchedEffect(isAddedToCart) {
+        if (isAddedToCart) {
+            delay(2000) // Keep showing "Added!" for 2 seconds
+            // In a real app you might navigate away or just allow adding more
+        }
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Total Price", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "$${String.format("%.2f", totalPrice)}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            }
+            AnimatedContent(
+                targetState = isAddedToCart,
+                transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) },
+                label = "AddToCartButtonAnimation"
+            ) { added ->
+                Button(
+                    onClick = onAddToCart,
+                    enabled = !added,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (added) Color.Gray else Color(0xFFFE724C),
+                        disabledContainerColor = Color.LightGray
+                    ),
+                    modifier = Modifier.height(52.dp).width(180.dp)
+                ) {
+                    if (added) {
+                        Icon(painterResource(id = R.drawable.ic_check), "Added", tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Added!", color = Color.White, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(painterResource(id = R.drawable.ic_cart), "Add to Cart", tint = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Add to Cart", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
     }
 }
 

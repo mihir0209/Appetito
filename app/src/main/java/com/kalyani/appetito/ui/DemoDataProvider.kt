@@ -61,7 +61,7 @@ object DemoDataProvider {
             CartItem(
                 name = "Greek salad",
                 description = "with baked salmon",
-                price = 12.00f,
+                price = 29.00f,
                 quantity = 2,
                 imageRes = R.drawable.greek_salad
             )
