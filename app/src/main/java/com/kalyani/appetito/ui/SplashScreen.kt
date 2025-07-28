@@ -19,13 +19,11 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
-    // This parameter is added to allow MainActivity to navigate away from the splash screen.
     onSplashFinished: () -> Unit
 ) {
-    // This block runs a side-effect (the delay) once when the composable enters the screen.
     LaunchedEffect(Unit) {
-        delay(2500) // Wait for 2.5 seconds
-        onSplashFinished() // Call the function to trigger navigation.
+        delay(2500)
+        onSplashFinished()
     }
 
     Box(
@@ -33,15 +31,12 @@ fun SplashScreen(
             .fillMaxSize()
             .background(Color(0xFFFE724C))
     ) {
-        // Logo/Image placeholder
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
         ) {
-            // Replace with actual image resource
             Image(painter = painterResource(id = R.drawable.appetito_logo), contentDescription = "Logo")
         }
-        // App Name
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -58,10 +53,8 @@ fun SplashScreen(
     }
 }
 
-// The preview remains unchanged so you can still view the UI in isolation.
 @Preview(showBackground = true)
 @Composable
 fun SplashScreenPreview() {
-    // We call the original function with an empty lambda for the preview.
     SplashScreen(onSplashFinished = {})
 }

@@ -20,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kalyani.appetito.R
 
 @Preview(showBackground = true)
 @Composable
@@ -34,7 +33,6 @@ fun RegistrationScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative circles (placeholders)
         Box(
             modifier = Modifier
                 .size(96.dp)

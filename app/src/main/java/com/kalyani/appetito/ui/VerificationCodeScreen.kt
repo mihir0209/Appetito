@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun VerificationCodeScreen(
-    // The function signature is already correct.
     onVerify: () -> Unit,
     onResend: () -> Unit
 ) {
@@ -42,7 +41,6 @@ fun VerificationCodeScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative circles remain in the background
         Box(
             modifier = Modifier
                 .size(96.dp)
@@ -62,7 +60,6 @@ fun VerificationCodeScreen(
                 .background(Color(0xFFFE724C), CircleShape)
         )
 
-        // A single column for a more responsive layout
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -88,7 +85,6 @@ fun VerificationCodeScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Code input fields
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
@@ -100,10 +96,8 @@ fun VerificationCodeScreen(
                 CodeTextField(value = code4.value, onValueChange = { code4.value = it }, modifier = codeFieldModifier)
             }
 
-            // Spacer with weight pushes the content below it to the bottom.
             Spacer(modifier = Modifier.weight(1f))
 
-            // Resend code
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -114,14 +108,12 @@ fun VerificationCodeScreen(
                     color = Color(0xFFFE724C),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
-                    // The onResend callback is now correctly wired here.
                     modifier = Modifier.clickable { onResend() }
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Verify Button
             Button(
                 onClick = onVerify,
                 shape = RoundedCornerShape(28.dp),
@@ -138,7 +130,6 @@ fun VerificationCodeScreen(
     }
 }
 
-// A helper composable to reduce repetition for the text fields.
 @Composable
 private fun CodeTextField(
     value: String,
@@ -167,7 +158,6 @@ private fun CodeTextField(
 @Preview(showBackground = true)
 @Composable
 fun VerificationCodeScreenPreview() {
-    // Calling the main composable with empty lambdas for the preview.
     VerificationCodeScreen(
         onVerify = {},
         onResend = {}

@@ -17,9 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 
-// Dummy data for the screen
 private data class FaqItem(val question: String, val answer: String)
 private val faqs = listOf(
     FaqItem("How do I track my order?", "You can track your order in real-time from the 'My Orders' section. You'll see the status of your food from preparation to delivery."),
@@ -29,13 +29,13 @@ private val faqs = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HelpsFaqsScreen() {
+fun HelpsFaqsScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Helps & FAQs", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -80,7 +80,7 @@ private fun FaqCard(faq: FaqItem) {
             }
             AnimatedVisibility(visible = isExpanded) {
                 Column {
-                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Text(text = faq.answer, color = Color.Gray)
                 }
             }
@@ -91,5 +91,5 @@ private fun FaqCard(faq: FaqItem) {
 @Preview(showBackground = true)
 @Composable
 fun HelpsFaqsScreenPreview() {
-    HelpsFaqsScreen()
+    HelpsFaqsScreen(navController = rememberNavController())
 }

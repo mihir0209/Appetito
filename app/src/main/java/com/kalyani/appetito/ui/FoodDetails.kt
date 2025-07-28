@@ -4,8 +4,6 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -28,7 +26,6 @@ import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 import kotlinx.coroutines.delay
 
-// Data classes and data provider function remain the same
 private data class FoodItemDetails(val id: String, val name: String, val description: String, val price: Float, val imageRes: Int, val rating: Float, val reviewCount: Int)
 private fun getFoodDetailsById(itemId: String?): FoodItemDetails {
     return when (itemId) {
@@ -55,10 +52,7 @@ fun FoodDetailsScreen(
     var isContentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isContentVisible = true }
 
-    // THE FIX: This effect will run whenever quantity or selectedAddOns changes.
     LaunchedEffect(quantity, selectedAddOns) {
-        // If the button is already in the "Added!" state, reset it
-        // because the user has changed their order.
         if (isAddedToCart) {
             isAddedToCart = false
         }
@@ -181,12 +175,10 @@ private fun AddToCartBar(
     val totalAddOnPrice = selectedAddOns.sumOf { it.price.toDouble() }.toFloat()
     val totalPrice = (foodItem.price + totalAddOnPrice) * quantity
 
-    // Use LaunchedEffect to reset the button state after a delay
     LaunchedEffect(isAddedToCart) {
         if (isAddedToCart) {
-            delay(2000) // Keep showing "Added!" for 2 seconds
-            // In a real app you might navigate away or just allow adding more
-        }
+            delay(2000)
+            }
     }
 
     Card(

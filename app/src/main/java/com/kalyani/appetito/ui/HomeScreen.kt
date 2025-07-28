@@ -87,107 +87,127 @@ fun HomeScreen(
 
 private fun lerp(start: Float, stop: Float, fraction: Float): Float = start + fraction * (stop - start)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreenContent(
     onMenuClick: () -> Unit,
     nestedNavController: NavHostController,
     mainNavController: NavHostController
 ) {
-    var isAddressMenuExpanded by remember { mutableStateOf(false) }
-    val addresses = listOf("DYP, Talsande", "Gangapur", "Gargoti")
+    val sheetState = rememberModalBottomSheetState()
+    var showAddressSheet by remember { mutableStateOf(false) }
+    val addresses = remember { listOf("DYP, Talsande", "Gangapur", "Gargoti") }
     var selectedAddress by remember { mutableStateOf(addresses.first()) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // --- Top Bar ---
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .verticalScroll(rememberScrollState())
         ) {
-            IconButton(onClick = onMenuClick) { Icon(painterResource(id = R.drawable.ic_menu), contentDescription = "Menu", tint = Color.Black) }
-            Spacer(modifier = Modifier.weight(1f))
-            Box {
-                Row(modifier = Modifier.clickable { isAddressMenuExpanded = true }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onMenuClick) { Icon(painterResource(id = R.drawable.ic_menu), contentDescription = "Menu", tint = Color.Black) }
+                Spacer(modifier = Modifier.weight(1f))
+                Row(
+                    modifier = Modifier.clickable { showAddressSheet = true },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Deliver to", color = Color.Gray, fontSize = 12.sp)
                         Text(selectedAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = Color(0xFFFE724C), modifier = Modifier.size(20.dp).padding(start = 4.dp))
                 }
-                DropdownMenu(expanded = isAddressMenuExpanded, onDismissRequest = { isAddressMenuExpanded = false }) {
-                    addresses.forEach { address -> DropdownMenuItem(text = { Text(address) }, onClick = { selectedAddress = address; isAddressMenuExpanded = false }) }
-                    Divider()
-                    DropdownMenuItem(text = { Text("Add new address", color = Color(0xFFFE724C)) }, onClick = { isAddressMenuExpanded = false; mainNavController.navigate("add_address") }, leadingIcon = { Icon(painter = painterResource(id = R.drawable.ic_plus), contentDescription = "Add Address", tint = Color(0xFFFE724C)) })
+                Spacer(modifier = Modifier.weight(1f))
+                Image(painter = painterResource(id = R.drawable.image_13), contentDescription = "Profile", modifier = Modifier.size(48.dp).clip(CircleShape).clickable { nestedNavController.navigate(BottomNavTab.Profile.route) })
+            }
+
+            // --- ALL CONTENT SECTIONS ARE RESTORED HERE ---
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(text = "What would you like to order?", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 36.sp, color = Color.Black)
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedTextField(
+                    value = "", onValueChange = {},
+                    placeholder = { Text("Find for food or restaurant...", color = Color.Gray) },
+                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_search), "Search", tint = Color(0xFFFE724C)) },
+                    trailingIcon = { Box(modifier = Modifier.background(Color(0xFFFE724C).copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(10.dp)) { Icon(painterResource(id = R.drawable.ic_filter), "Filter", tint = Color(0xFFFE724C)) } },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent, focusedBorderColor = Color(0xFFFE724C), unfocusedContainerColor = Color(0xFFF0F0F0), focusedContainerColor = Color(0xFFF0F0F0)),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                CategoryChip("Burger", R.drawable.img_burger, selected = true)
+                CategoryChip("Donat", R.drawable.img_burger); CategoryChip("Pizza", R.drawable.img_burger)
+                CategoryChip("Mexican", R.drawable.img_burger); CategoryChip("Asian", R.drawable.img_burger)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Featured Restaurants", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.weight(1f))
+                    Text("View All >", fontSize = 14.sp, color = Color(0xFFFE724C), modifier = Modifier.clickable { /* TODO */ })
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    RestaurantCard("McDonald's", R.drawable.mcdonalds_img, 4.9f, onClick = { mainNavController.navigate("food_details/mcdonalds") })
+                    RestaurantCard("Starbucks", R.drawable.starbucks_img, 4.7f, onClick = { mainNavController.navigate("food_details/starbucks") })
                 }
             }
-            Spacer(modifier = Modifier.weight(1f))
-            Image(painter = painterResource(id = R.drawable.image_13), contentDescription = "Profile", modifier = Modifier.size(48.dp).clip(CircleShape).clickable { nestedNavController.navigate(BottomNavTab.Profile.route) })
-        }
-
-        // THE FIX: Sections are now laid out directly in the Column, removing the buggy helper.
-
-        // --- Header Section ---
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(text = "What would you like to order?", fontSize = 25.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(20.dp))
-            OutlinedTextField(
-                value = "", onValueChange = {},
-                placeholder = { Text("Find for food or restaurant...", color = Color.Gray) },
-                leadingIcon = { Icon(painterResource(id = R.drawable.ic_search), "Search", tint = Color(0xFFFE724C)) },
-                trailingIcon = { Box(modifier = Modifier.background(Color(0xFFFE724C).copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(10.dp)) { Icon(painterResource(id = R.drawable.ic_filter), "Filter", tint = Color(0xFFFE724C)) } },
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent, focusedBorderColor = Color(0xFFFE724C), unfocusedContainerColor = Color(0xFFF0F0F0), focusedContainerColor = Color(0xFFF0F0F0)),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        // --- Categories Section ---
-        Spacer(modifier = Modifier.height(24.dp))
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-            CategoryChip("Burger", R.drawable.img_burger, selected = true)
-            CategoryChip("Donat", R.drawable.img_burger)
-            CategoryChip("Pizza", R.drawable.img_burger)
-            CategoryChip("Mexican", R.drawable.img_burger)
-            CategoryChip("Asian", R.drawable.img_burger)
-        }
-
-        // --- Featured Restaurants Section ---
-        Spacer(modifier = Modifier.height(24.dp))
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Featured Restaurants", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.weight(1f))
-                Text("View All >", fontSize = 14.sp, color = Color(0xFFFE724C), modifier = Modifier.clickable { /* TODO */ })
+            Spacer(modifier = Modifier.height(24.dp))
+            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text("Popular Items", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Spacer(modifier = Modifier.height(16.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    PopularItemCard("Cheese Burger", "Burger King", "$5.50", R.drawable.img_burger, onClick = { mainNavController.navigate("food_details/cheese_burger") })
+                    PopularItemCard("Toffee's Cake", "Top Cake", "$8.25", R.drawable.cake_img, onClick = { mainNavController.navigate("food_details/toffee_cake") })
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                RestaurantCard("McDonald's", R.drawable.mcdonalds_img, 4.9f, onClick = { mainNavController.navigate("food_details/mcdonalds") })
-                RestaurantCard("Starbucks", R.drawable.starbucks_img, 4.7f, onClick = { mainNavController.navigate("food_details/starbucks") })
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // FIX: The ModalBottomSheet is now a direct child of the Box, outside the scrollable Column.
+        if (showAddressSheet) {
+            ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
+                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
+                    Text("Select Address", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(16.dp))
+                    addresses.forEach { address ->
+                        AddressListItem(address = address, isSelected = address == selectedAddress, onClick = { selectedAddress = address; showAddressSheet = false })
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { showAddressSheet = false; mainNavController.navigate("add_address") }.padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(painter = painterResource(id = R.drawable.ic_plus), contentDescription = "Add Address", tint = Color(0xFFFE724C))
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Text("Add new address", color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
-
-        // --- Popular Items Section ---
-        Spacer(modifier = Modifier.height(24.dp))
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-            Text("Popular Items", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-            Spacer(modifier = Modifier.height(16.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                PopularItemCard("Cheese Burger", "Burger King", "$5.50", R.drawable.img_burger, onClick = { mainNavController.navigate("food_details/cheese_burger") })
-                PopularItemCard("Toffee's Cake", "Top Cake", "$8.25", R.drawable.cake_img, onClick = { mainNavController.navigate("food_details/toffee_cake") })
-            }
-        }
-        Spacer(modifier = Modifier.height(24.dp)) // Final padding at the bottom
     }
 }
 
-// --- ALL HELPER COMPOSABLES BELOW ARE CORRECT AND UNCHANGED ---
+// FIX: This helper composable is now defined at the top level of the file.
+@Composable
+private fun AddressListItem(address: String, isSelected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(painter = painterResource(id = R.drawable.ic_location), contentDescription = null, tint = if (isSelected) Color(0xFFFE724C) else Color.Gray, modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(text = address, modifier = Modifier.weight(1f), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+        RadioButton(selected = isSelected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFE724C)))
+    }
+}
 
 @Composable
 fun SideMenuFigma(
@@ -201,13 +221,12 @@ fun SideMenuFigma(
             Image(painterResource(id = R.drawable.image_13), "Profile", modifier = Modifier.size(64.dp).clip(CircleShape))
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text("Farian Wick", fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Black)
-                Text("farianwick@gmail.com", fontSize = 14.sp, color = Color.Gray)
+                Text("Kalyani Patil", fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Black)
+                Text("patil.kalyanii0209@gmail.com", fontSize = 14.sp, color = Color.Gray)
             }
         }
         Spacer(modifier = Modifier.height(48.dp))
 
-        // --- Navigation actions are now wired up ---
         SideMenuItemFigma("My Orders", R.drawable.ic_order, onClick = { mainNavController.navigate("orders") })
         SideMenuItemFigma("My Profile", R.drawable.ic_profile, onClick = { nestedNavController.navigate(BottomNavTab.Profile.route) })
         SideMenuItemFigma("Delivery Address", R.drawable.ic_location, onClick = { mainNavController.navigate("add_address") })
@@ -216,15 +235,11 @@ fun SideMenuFigma(
         SideMenuItemFigma("Settings", R.drawable.ic_settings, onClick = { mainNavController.navigate("settings") })
         SideMenuItemFigma("Helps & FAQs", R.drawable.ic_help, onClick = { mainNavController.navigate("help") })
 
-        Spacer(modifier = Modifier.weight(1f)) // This pushes the button to the bottom
-
-        // --- Log Out Button with Correct Navigation Logic ---
+        Spacer(modifier = Modifier.weight(1f))
         Button(
             onClick = {
                 mainNavController.navigate("login") {
-                    // This is the crucial part: it clears the back stack up to the
-                    // main_app route, so the user can't go back to a logged-in screen.
-                    popUpTo("main_app") {
+                     popUpTo("main_app") {
                         inclusive = true
                     }
                     launchSingleTop = true

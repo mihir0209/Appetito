@@ -43,7 +43,7 @@ data class HistoryOrder(
 object DemoDataProvider {
     val user = DemoUser(
         name = "Kalyani Patil",
-        email = "patil.kalyani@gmail.com",
+        email = "patil.kalyanii0209@gmail.com",
         phone = "+91 9876543210",
         balance = 902.29f,
         profileImageRes = R.drawable.image_13

@@ -3,11 +3,7 @@ package ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,29 +35,24 @@ data class UserAddress(
     val street: String
 )
 
-// Dummy data for saved addresses, as you requested.
 val savedAddresses = mutableStateListOf(
-    UserAddress(1, "Arlene McCoy", "018-49862746", "California", "Los Angeles", "123 Sunnyvale Dr"),
-    UserAddress(2, "John Doe", "555-123-4567", "New York", "New York City", "456 Metro Ave, Apt 8B")
+    UserAddress(1, "Kalyani Patil", "+91 9876543210", "DYP", "Talsande", "Happi Street"),
+    UserAddress(2, "Kalyani Patil 2", "+91 9876543210", "DYP 2", "Talsande", "Happii Street")
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNewAddressScreen(
-    // We need the NavController to handle back and save navigation.
     navController: NavHostController
 ) {
-    // State to hold the values of the input fields.
     var fullName by remember { mutableStateOf("") }
     var mobileNumber by remember { mutableStateOf("") }
     var state by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var street by remember { mutableStateOf("") }
 
-    // State to track which address is being edited. Null means we are adding a new one.
     var editingAddressId by remember { mutableStateOf<Int?>(null) }
 
-    // Function to populate fields when "Edit" is clicked.
     fun populateFieldsForEdit(address: UserAddress) {
         editingAddressId = address.id
         fullName = address.fullName
@@ -71,7 +62,6 @@ fun AddNewAddressScreen(
         street = address.street
     }
 
-    // Function to clear fields for adding a new address.
     fun clearFieldsForNew() {
         editingAddressId = null
         fullName = ""
@@ -81,7 +71,6 @@ fun AddNewAddressScreen(
         street = ""
     }
 
-    // THE FIX: Scaffold handles the status bar overlap automatically.
     Scaffold(
         topBar = {
             TopAppBar(
@@ -113,7 +102,6 @@ fun AddNewAddressScreen(
                 }
             }
 
-            // --- Button to Add a New Address ---
             OutlinedButton(
                 onClick = { clearFieldsForNew() },
                 modifier = Modifier.fillMaxWidth(),
@@ -125,9 +113,8 @@ fun AddNewAddressScreen(
                 Text("Add New Address", color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
             }
 
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // --- Section for the Address Form ---
             AnimatedVisibility(
                 visible = true, // Can be used to show/hide the form
                 enter = fadeIn(tween(300))
@@ -144,12 +131,11 @@ fun AddNewAddressScreen(
                     AddressTextField(label = "City", value = city, onValueChange = { city = it })
                     AddressTextField(label = "Street (Include house number)", value = street, onValueChange = { street = it })
 
-                    // --- Save Button ---
                     Button(
                         onClick = {
                             // TODO: Add actual save/update logic here
-                            navController.popBackStack() // Navigate back to home screen
-                        },
+                            navController.popBackStack()
+                                  },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
@@ -169,7 +155,6 @@ fun AddNewAddressScreen(
     }
 }
 
-// A helper composable for displaying a saved address.
 @Composable
 private fun AddressRow(address: UserAddress, onEdit: () -> Unit) {
     Row(
@@ -189,7 +174,6 @@ private fun AddressRow(address: UserAddress, onEdit: () -> Unit) {
 }
 
 
-// A helper composable to reduce repetition for our TextFields.
 @Composable
 private fun AddressTextField(
     label: String,

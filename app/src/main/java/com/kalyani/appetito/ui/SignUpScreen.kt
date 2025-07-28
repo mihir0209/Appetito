@@ -21,7 +21,6 @@ import com.kalyani.appetito.R
 
 @Composable
 fun SignUpScreen(
-    // The function signature is updated to match MainActivity's calls.
     onSignUp: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onFacebookSignUp: () -> Unit,
@@ -36,7 +35,6 @@ fun SignUpScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative circles (placeholders)
         Box(
             modifier = Modifier
                 .size(96.dp)
@@ -55,8 +53,6 @@ fun SignUpScreen(
                 .offset(x = 298.dp, y = (-109).dp)
                 .background(Color(0xFFFE724C), CircleShape)
         )
-
-        // Main content column
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -127,7 +123,6 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             Button(
-                // Wired to the correct parameter.
                 onClick = onSignUp,
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
@@ -140,7 +135,6 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // --- "Already have an account? Login" ABOVE social options ---
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -156,13 +150,11 @@ fun SignUpScreen(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .padding(start = 2.dp)
-                        // Wired to the correct parameter.
                         .clickable(onClick = onNavigateToLogin)
                 )
             }
 
             Spacer(modifier = Modifier.height(100.dp))
-            // --- Centered divider with 'Sign up with' text ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -178,14 +170,12 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // --- Social signup buttons ---
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 // Facebook
                 Button(
-                    // Wired to the correct parameter.
                     onClick = onFacebookSignUp,
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -209,7 +199,6 @@ fun SignUpScreen(
                 }
                 // Google
                 Button(
-                    // Wired to the correct parameter.
                     onClick = onGoogleSignUp,
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -232,12 +221,11 @@ fun SignUpScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp)) // Space from bottom, as needed
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-// The Preview is updated to call the function with the new, correct signature.
 @Preview(showBackground = true)
 @Composable
 fun SignUpScreenPreview() {

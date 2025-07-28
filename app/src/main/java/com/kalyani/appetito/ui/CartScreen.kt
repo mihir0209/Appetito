@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -17,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -25,90 +23,55 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
-import kotlinx.coroutines.delay
 import kotlin.collections.sumOf
+
+// In ui/CartScreen.kt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen() {
-    // This state management is perfect for a self-contained preview.
+fun CartScreen(nestedNavController: NavHostController, mainNavController: NavHostController) {
     var cartItems by remember { mutableStateOf(DemoDataProvider.cartItems) }
-
-    // This state will trigger our animations.
     var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
+    LaunchedEffect(Unit) { isVisible = true }
 
     Scaffold(
-        // The TopAppBar provides a fixed header that does not scroll.
         topBar = {
             TopAppBar(
                 title = { Text("Cart", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    IconButton(onClick = {
+                        nestedNavController.navigate(BottomNavTab.Home.route) {
+                            popUpTo(nestedNavController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
-        // The bottomBar provides a robust "sticky footer" for the checkout button.
-        bottomBar = {
-            CheckoutBar(items = cartItems) {
-                // TODO: Handle checkout logic
-            }
-        },
-        containerColor = Color(0xFFF5F5F5) // A light gray background makes white cards pop.
+        bottomBar = { CheckoutBar(items = cartItems, onCheckout = { mainNavController.navigate("checkout") }) },
+        containerColor = Color(0xFFF5F5F5)
     ) { innerPadding ->
-        // LazyColumn is more performant than a simple Column with a scroll modifier.
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.padding(innerPadding).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            itemsIndexed(
-                items = cartItems,
-                key = { _, item -> item.name } // A key helps Compose optimize updates.
-            ) { index, item ->
-                // This will animate each item fading and sliding in, one after another.
+            itemsIndexed(items = cartItems, key = { _, item -> item.name }) { index, item ->
                 AnimatedVisibility(
                     visible = isVisible,
-                    enter = fadeIn(animationSpec = tween(durationMillis = 500, delayMillis = index * 100)) +
-                            slideInVertically(
-                                initialOffsetY = { 40 },
-                                animationSpec = tween(durationMillis = 500, delayMillis = index * 100)
-                            )
+                    enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
                 ) {
-                    CartItemCard(
-                        item = item,
-                        onIncrease = {
-                            cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity + 1) }
-                        },
-                        onDecrease = {
-                            if (item.quantity > 1) {
-                                cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity - 1) }
-                            } else {
-                                // If quantity is 1, decrease removes the item.
-                                cartItems = cartItems.toMutableList().apply { removeAt(index) }
-                            }
-                        },
-                        onRemove = {
-                            cartItems = cartItems.toMutableList().apply { removeAt(index) }
-                        }
-                    )
+                    CartItemCard(item = item, onIncrease = { cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity + 1) } }, onDecrease = { if (item.quantity > 1) { cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity - 1) } } else { cartItems = cartItems.toMutableList().apply { removeAt(index) } } }, onRemove = { cartItems = cartItems.toMutableList().apply { removeAt(index) } })
                 }
             }
-
-            // Price Summary and Promo Code section
             item {
+                // THE FIX: The invalid 'val' keyword is removed.
                 PriceSummaryCard(items = cartItems)
             }
         }
@@ -191,7 +154,7 @@ fun PriceSummaryCard(items: List<CartItem>) {
                     Text("Apply", color = Color.White)
                 }
             }
-            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
             PriceRow(label = "Subtotal", value = subtotal)
             PriceRow(label = "Tax and Fees", value = taxAndFees)
             PriceRow(label = "Delivery", value = delivery)
@@ -232,7 +195,6 @@ fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
     }
 }
 
-// A helper composable for the small +/- buttons to reduce repetition.
 @Composable
 private fun SmallIconButton(onClick: () -> Unit, iconRes: Int, isPrimary: Boolean = false) {
     Button(
@@ -253,7 +215,6 @@ private fun SmallIconButton(onClick: () -> Unit, iconRes: Int, isPrimary: Boolea
     }
 }
 
-// A cleaner version of the price row.
 @Composable
 private fun PriceRow(label: String, value: Float) {
     Row(
@@ -277,5 +238,5 @@ private fun PriceRow(label: String, value: Float) {
 @Preview(showBackground = true)
 @Composable
 fun CartScreenPreview() {
-    CartScreen()
+    CartScreen(nestedNavController = rememberNavController(), mainNavController = rememberNavController())
 }

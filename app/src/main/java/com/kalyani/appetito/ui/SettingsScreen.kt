@@ -15,11 +15,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavHostController) {
     var notificationState by remember { mutableStateOf(true) }
     var darkModeState by remember { mutableStateOf(false) }
 
@@ -28,7 +30,7 @@ fun SettingsScreen() {
             TopAppBar(
                 title = { Text("Settings", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -55,7 +57,8 @@ fun SettingsScreen() {
                         checked = notificationState,
                         onCheckedChange = { notificationState = it }
                     )
-                    Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                    // THE FIX: Renamed Divider to HorizontalDivider
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsToggleRow(
                         iconRes = R.drawable.ic_dark_mode, // Example icon
                         title = "Dark Mode",
@@ -109,5 +112,5 @@ private fun SettingsToggleRow(
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen()
+    SettingsScreen(navController = rememberNavController())
 }

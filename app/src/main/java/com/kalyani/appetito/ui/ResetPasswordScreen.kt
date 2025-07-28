@@ -23,7 +23,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun ResetPasswordScreen(
-    // The function signature is already correct.
     onSendNewPassword: () -> Unit
 ) {
     val email = remember { mutableStateOf("") }
@@ -33,7 +32,6 @@ fun ResetPasswordScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative circles (placeholders)
         Box(
             modifier = Modifier
                 .size(96.dp)
@@ -53,7 +51,6 @@ fun ResetPasswordScreen(
                 .background(Color(0xFFFE724C), CircleShape)
         )
 
-        // Main content column for a responsive layout
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -101,10 +98,8 @@ fun ResetPasswordScreen(
                 )
             )
 
-            // This spacer pushes the button towards the bottom.
             Spacer(modifier = Modifier.weight(1f))
 
-            // Send new password Button
             Button(
                 onClick = onSendNewPassword,
                 shape = RoundedCornerShape(28.dp),
@@ -120,7 +115,6 @@ fun ResetPasswordScreen(
     }
 }
 
-// Updated preview to match the new function signature.
 @Preview(showBackground = true)
 @Composable
 fun ResetPasswordScreenPreview() {

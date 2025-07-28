@@ -16,17 +16,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContactUsScreen() {
+fun ContactUsScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Contact Us", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -96,5 +98,5 @@ private fun ContactOptionCard(iconRes: Int, title: String, subtitle: String, onC
 @Preview(showBackground = true)
 @Composable
 fun ContactUsScreenPreview() {
-    ContactUsScreen()
+    ContactUsScreen(navController= rememberNavController())
 }

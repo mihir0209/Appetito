@@ -18,10 +18,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
-// Dummy data for the screen
 private data class PaymentCard(val type: String, val last4Digits: String, val iconRes: Int)
 private val savedCards = listOf(
     PaymentCard("Visa", "4242", R.drawable.ic_visa),
@@ -30,13 +30,13 @@ private val savedCards = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentMethodsScreen() {
+fun PaymentMethodsScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Payment Methods", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -93,5 +93,5 @@ fun PaymentMethodsScreen() {
 @Preview(showBackground = true)
 @Composable
 fun PaymentMethodsScreenPreview() {
-    PaymentMethodsScreen()
+    PaymentMethodsScreen(navController = rememberNavController())
 }

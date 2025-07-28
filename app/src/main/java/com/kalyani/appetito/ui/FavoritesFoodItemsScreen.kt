@@ -3,7 +3,6 @@ package ui
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,13 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
-// Data classes for our items
 data class FavoriteFood(val name: String, val description: String, val price: Float, val rating: Float, val reviews: Int, val imageRes: Int)
 data class FavoriteRestaurant(val name: String, val categories: String, val deliveryTime: String, val imageRes: Int)
 
-// Sample data providers
 fun sampleFavoriteFoods() = listOf(
     FavoriteFood("Chicken Hawaiian", "Chicken, Cheese and pineapple", 9.20f, 4.5f, 25, R.drawable.chicken_hawaiian),
     FavoriteFood("Red N Hot Pizza", "Chicken, Chili", 10.35f, 4.5f, 75, R.drawable.pizza_3),
@@ -41,11 +40,11 @@ fun sampleFavoriteRestaurants() = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FavoritesFoodItemsScreen() {
+// THE FIX 1: Add the nestedNavController parameter.
+fun FavoritesFoodItemsScreen(nestedNavController: NavHostController) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val favoriteFoods = remember { sampleFavoriteFoods() }
     val favoriteRestaurants = remember { sampleFavoriteRestaurants() }
-
     var isContentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isContentVisible = true }
 
@@ -54,66 +53,40 @@ fun FavoritesFoodItemsScreen() {
             TopAppBar(
                 title = { Text("Favorites", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                    // THE FIX 2: Implement the back navigation.
+                    IconButton(onClick = {
+                        nestedNavController.navigate(BottomNavTab.Home.route) {
+                            popUpTo(nestedNavController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    }) {
                         Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
-        containerColor = Color(0xFFF5F5F5) // Light gray background
+        containerColor = Color(0xFFF5F5F5)
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            // Custom TabRow for switching between Food Items and Restaurants
-            TabRow(
-                selectedTabIndex = selectedTabIndex,
-                containerColor = Color.White,
-                indicator = { tabPositions ->
-                    TabRowDefaults.Indicator(
-                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
-                        color = Color(0xFFFE724C)
-                    )
-                }
-            ) {
-                Tab(
-                    selected = selectedTabIndex == 0,
-                    onClick = { selectedTabIndex = 0 },
-                    text = { Text("Food Items", color = if (selectedTabIndex == 0) Color(0xFFFE724C) else Color.Gray) }
-                )
-                Tab(
-                    selected = selectedTabIndex == 1,
-                    onClick = { selectedTabIndex = 1 },
-                    text = { Text("Restaurants", color = if (selectedTabIndex == 1) Color(0xFFFE724C) else Color.Gray) }
-                )
+            TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.White, indicator = { tabPositions -> TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]), color = Color(0xFFFE724C)) }) {
+                Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }, text = { Text("Food Items", color = if (selectedTabIndex == 0) Color(0xFFFE724C) else Color.Gray) })
+                Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }, text = { Text("Restaurants", color = if (selectedTabIndex == 1) Color(0xFFFE724C) else Color.Gray) })
             }
 
-            // AnimatedContent smoothly switches between the two lists
             AnimatedContent(
                 targetState = selectedTabIndex,
                 transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
                 label = "FavoritesTabAnimation"
             ) { tabIndex ->
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
+                LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     if (tabIndex == 0) {
                         itemsIndexed(favoriteFoods) { index, food ->
-                            AnimatedVisibility(
-                                visible = isContentVisible,
-                                enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
-                            ) {
-                                FavoriteFoodCard(food)
-                            }
+                            AnimatedVisibility(visible = isContentVisible, enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))) { FavoriteFoodCard(food) }
                         }
                     } else {
                         itemsIndexed(favoriteRestaurants) { index, restaurant ->
-                            AnimatedVisibility(
-                                visible = isContentVisible,
-                                enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
-                            ) {
-                                FavoriteRestaurantCard(restaurant)
-                            }
+                            AnimatedVisibility(visible = isContentVisible, enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))) { FavoriteRestaurantCard(restaurant) }
                         }
                     }
                 }
@@ -135,7 +108,6 @@ fun FavoriteFoodCard(food: FavoriteFood) {
             Image(
                 painter = painterResource(id = food.imageRes),
                 contentDescription = food.name,
-                // FIX: ContentScale.Crop fills the space without distorting the image
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxWidth().height(160.dp)
             )
@@ -188,5 +160,5 @@ fun FavoriteRestaurantCard(restaurant: FavoriteRestaurant) {
 @Preview(showBackground = true)
 @Composable
 fun FavoritesFoodItemsScreenPreview() {
-    FavoritesFoodItemsScreen()
+    FavoritesFoodItemsScreen(nestedNavController = rememberNavController())
 }

@@ -3,7 +3,6 @@ package ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,11 +24,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryScreen() {
+// THE FIX: The function now correctly accepts a NavHostController.
+fun CategoryScreen(navController: NavHostController) {
     val categories = listOf(
         CategoryItemData("Chicken Hawaiian", "Chicken, Cheese and pineapple", 10.35f, 4.5f, 25, R.drawable.chicken_hawaiian),
         CategoryItemData("Margherita Pizza", "Fresh tomatoes, mozzarella, basil", 8.99f, 4.7f, 42, R.drawable.pizza_2),
@@ -40,37 +42,36 @@ fun CategoryScreen() {
     var isContentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isContentVisible = true }
 
-    // This outer Box acts as the canvas for our layers.
     Box(modifier = Modifier.fillMaxSize().background(Color.White)) {
-
-        // THE FIX: The background image is now positioned correctly.
-        // It's aligned to the top-right corner, then offset to push it
-        // partially off-screen, creating the "peek" effect.
         Image(
             painter = painterResource(id = R.drawable.pizza),
             contentDescription = null,
             contentScale = ContentScale.Fit,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .size(500.dp) // Increased size here
+                .size(500.dp)
                 .offset(x = 100.dp, y = (-150).dp)
         )
-
 
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
-                        IconButton(onClick = { /* Handle back navigation */ }) {
+                        // THE FIX: The back button is now functional.
+                        IconButton(onClick = {
+                            // This navigates back to the Home screen, the start of the tabs.
+                            navController.navigate(BottomNavTab.Home.route) {
+                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }) {
                             Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back", tint = Color.Black)
                         }
                     },
-                    // The TopAppBar must be transparent to see the image behind it.
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
                 )
             },
-            // The main container must also be transparent.
             containerColor = Color.Transparent
         ) { innerPadding ->
             LazyColumn(modifier = Modifier.padding(innerPadding)) {
@@ -102,16 +103,20 @@ fun CategoryScreen() {
                     }
                 }
                 itemsIndexed(categories) { index, item ->
-                    // THE FIX: Enhanced slide-in and fade-in animation for each card.
                     AnimatedVisibility(
                         visible = isContentVisible,
                         enter = fadeIn(animationSpec = tween(500, delayMillis = index * 100)) +
                                 slideInVertically(
-                                    initialOffsetY = { 60 }, // Start further down
+                                    initialOffsetY = { 60 },
                                     animationSpec = tween(500, delayMillis = index * 100)
                                 )
                     ) {
-                        CategoryCard(item)
+                        CategoryCard(item, onClick = {
+                            // Example: Navigate to food details when a card is clicked
+                            // Note: We would need the *main* NavController for this to work.
+                            // For now, the action is commented out.
+                            // mainNavController.navigate("food_details/${item.name}")
+                        })
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -121,7 +126,6 @@ fun CategoryScreen() {
     }
 }
 
-// CategoryItemData and CategoryCard composables remain unchanged as they were already excellent.
 data class CategoryItemData(
     val name: String,
     val description: String,
@@ -132,10 +136,10 @@ data class CategoryItemData(
 )
 
 @Composable
-fun CategoryCard(item: CategoryItemData) {
+fun CategoryCard(item: CategoryItemData, onClick: () -> Unit) {
     var isFavorite by remember { mutableStateOf(false) }
     Card(
-        modifier = Modifier.padding(horizontal = 26.dp).fillMaxWidth().clickable { /* Handle item click */ },
+        modifier = Modifier.padding(horizontal = 26.dp).fillMaxWidth().clickable(onClick = onClick),
         shape = RoundedCornerShape(18.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -181,5 +185,6 @@ fun CategoryCard(item: CategoryItemData) {
 @Preview(showBackground = true)
 @Composable
 fun CategoryScreenPreview() {
-    CategoryScreen()
+    // THE FIX: The preview now passes a dummy NavController.
+    CategoryScreen(navController = rememberNavController())
 }

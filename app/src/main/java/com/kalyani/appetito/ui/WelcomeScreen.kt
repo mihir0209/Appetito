@@ -34,7 +34,6 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Full background image covering entire screen
         Image(
             painter = painterResource(R.drawable.welcome_bg),
             contentDescription = null,
@@ -42,7 +41,6 @@ fun WelcomeScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Dark gradient overlay for better text readability
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -59,7 +57,6 @@ fun WelcomeScreen(
                 )
         )
 
-        // Skip button - top right
         Button(
             onClick = onSkip,
             shape = RoundedCornerShape(16.dp),
@@ -78,7 +75,6 @@ fun WelcomeScreen(
             )
         }
 
-        // Main content - positioned in lower half
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,7 +128,6 @@ fun WelcomeScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Sign in with text with lines
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
@@ -158,12 +153,10 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Social buttons row - pill shaped
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Facebook Button - pill shaped
                 Button(
                     onClick = onFacebook,
                     shape = RoundedCornerShape(50.dp), // Fully rounded
@@ -192,7 +185,6 @@ fun WelcomeScreen(
                     }
                 }
 
-                // Google Button - pill shaped
                 Button(
                     onClick = onGoogle,
                     shape = RoundedCornerShape(50.dp), // Fully rounded
@@ -224,7 +216,6 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Email/Phone button - pill shaped with border
             OutlinedButton(
                 onClick = onEmailOrPhone,
                 shape = RoundedCornerShape(50.dp), // Fully rounded
@@ -247,7 +238,6 @@ fun WelcomeScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Sign in text
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -267,19 +257,9 @@ fun WelcomeScreen(
             }
         }
 
-        // Bottom indicator bar
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp)
-                .width(60.dp)
-                .height(4.dp)
-                .background(Color.White.copy(alpha = 0.7f), RoundedCornerShape(2.dp))
-        )
     }
 }
 
-// The preview works perfectly as is.
 @Preview(showBackground = true)
 @Composable
 fun WelcomeScreenPreview() {

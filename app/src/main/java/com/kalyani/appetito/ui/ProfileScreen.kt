@@ -23,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +38,6 @@ import kotlinx.coroutines.delay
 fun ProfileScreen(
     mainNavController: NavHostController
 ) {
-    // Animation triggers are preserved to keep your fade-in effect
     var showContent by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(200)
@@ -48,7 +46,6 @@ fun ProfileScreen(
 
     val user = DemoDataProvider.user
 
-    // A light gray background makes the white cards pop
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,13 +77,13 @@ fun ProfileScreen(
                             label = "Full Name",
                             value = user.name
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileInfoRow(
                             icon = R.drawable.ic_message,
                             label = "E-mail",
                             value = user.email
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileInfoRow(
                             icon = R.drawable.ic_phone, // Example icon
                             label = "Phone Number",
@@ -107,13 +104,13 @@ fun ProfileScreen(
                             text = "My Orders",
                             onClick = { mainNavController.navigate("orders") }
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileOptionRow(
                             icon = R.drawable.ic_location,
                             text = "Delivery Addresses",
                             onClick = { mainNavController.navigate("add_address") }
                         )
-                        Divider(modifier = Modifier.padding(horizontal = 16.dp))
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         ProfileOptionRow(
                             icon = R.drawable.ic_settings,
                             text = "Settings",

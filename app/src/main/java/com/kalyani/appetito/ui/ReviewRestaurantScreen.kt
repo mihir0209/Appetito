@@ -2,7 +2,6 @@ package ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,7 +13,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -23,11 +21,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kalyani.appetito.R // Make sure to use your actual R file import
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.kalyani.appetito.R
 
-@Preview(showBackground = true)
 @Composable
-fun ReviewRestaurantScreen() {
+fun ReviewRestaurantScreen(navController: NavHostController) {
     var rating by remember { mutableStateOf(4) }
     var review by remember { mutableStateOf("") }
     val ratingText = when (rating) {
@@ -61,8 +60,8 @@ fun ReviewRestaurantScreen() {
                     modifier = Modifier
                         .size(44.dp)
                         .align(Alignment.CenterStart)
-                        .shadow(elevation = 8.dp, shape = CircleShape),
-                    onClick = { /* Handle back press */ },
+                        .shadow(elevation = 8.dp, shape = CircleShape)
+                        .clickable { navController.popBackStack() }, // Standard "Go Back" action
                     colors = CardDefaults.cardColors(containerColor = Color.White)
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -77,7 +76,6 @@ fun ReviewRestaurantScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Restaurant Logo
             Card(
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
@@ -94,9 +92,8 @@ fun ReviewRestaurantScreen() {
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Main question text
             Text(
-                text = "How was your last order from Pizza Hut ?",
+                text = "How was your last order from Pizza Hut?", // Corrected typo
                 fontSize = 26.sp,
                 color = Color.Black,
                 fontWeight = FontWeight.Normal,
@@ -106,7 +103,6 @@ fun ReviewRestaurantScreen() {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Rating text (e.g., "Good")
             Text(
                 text = ratingText,
                 fontSize = 22.sp,
@@ -116,7 +112,6 @@ fun ReviewRestaurantScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Stars for rating
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
@@ -140,12 +135,11 @@ fun ReviewRestaurantScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Review input field with only a bottom line
             TextField(
                 value = review,
                 onValueChange = { review = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Write", color = Color.Gray.copy(alpha = 0.5f)) },
+                placeholder = { Text("Write your review...", color = Color.Gray.copy(alpha = 0.5f)) }, // Improved placeholder
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
@@ -155,7 +149,6 @@ fun ReviewRestaurantScreen() {
                 )
             )
 
-            // This spacer pushes the submit button to the bottom
             Spacer(modifier = Modifier.weight(1f))
 
             // Submit button
@@ -177,4 +170,10 @@ fun ReviewRestaurantScreen() {
             }
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ReviewRestaurantScreenPreview() {
+    ReviewRestaurantScreen(navController = rememberNavController())
 }

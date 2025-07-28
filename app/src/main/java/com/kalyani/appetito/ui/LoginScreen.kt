@@ -27,7 +27,6 @@ import com.kalyani.appetito.R
 
 @Composable
 fun LoginScreen(
-    // The function signature is updated to be more descriptive and match MainActivity's calls.
     onLoginSuccess: () -> Unit,
     onNavigateToSignUp: () -> Unit,
     onForgotPassword: () -> Unit,
@@ -42,7 +41,6 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
-        // Decorative circles (placeholders)
         Box(
             modifier = Modifier
                 .size(96.dp)
@@ -108,7 +106,6 @@ fun LoginScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
-            // Right-aligned "Forgot password?"
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -120,14 +117,11 @@ fun LoginScreen(
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .padding(top = 4.dp, end = 4.dp)
-                        // The onClick is now wired to the correct parameter.
                         .clickable(onClick = onForgotPassword)
                 )
             }
             Spacer(modifier = Modifier.height(22.dp))
-            // Login Button
             Button(
-                // The onClick is now wired to the correct parameter.
                 onClick = onLoginSuccess,
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
@@ -140,7 +134,6 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // "Don't have an account? Sign Up" below Login button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -151,14 +144,12 @@ fun LoginScreen(
                     color = Color(0xFFFE724C),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    // The onClick is now wired to the correct parameter.
                     modifier = Modifier.clickable { onNavigateToSignUp() }
                 )
             }
 
 
             Spacer(modifier = Modifier.height(100.dp))
-            // --- Centered divider with 'Sign up with' text ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -174,14 +165,12 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // --- Social signup buttons ---
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 // Facebook
                 Button(
-                    // The onClick is now wired to the correct parameter.
                     onClick = onFacebookLogin,
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -205,7 +194,6 @@ fun LoginScreen(
                 }
                 // Google
                 Button(
-                    // The onClick is now wired to the correct parameter.
                     onClick = onGoogleLogin,
                     shape = RoundedCornerShape(22.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.White),
@@ -228,12 +216,11 @@ fun LoginScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(16.dp)) // Space from bottom, as needed
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
 
-// The Preview needs to be updated to call the function with the new signature.
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
