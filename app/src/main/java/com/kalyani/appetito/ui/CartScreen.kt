@@ -1,13 +1,17 @@
 package ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,289 +22,139 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import com.kalyani.appetito.R
+import kotlinx.coroutines.delay
 import kotlin.collections.sumOf
 
-
-@Preview(showBackground = true)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen() {
+    // This state management is perfect for a self-contained preview.
     var cartItems by remember { mutableStateOf(DemoDataProvider.cartItems) }
 
-    val subtotal = cartItems.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
+    // This state will trigger our animations.
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
 
-    val taxAndFees = 5.30f
-    val delivery = 1.00f
-    val total = subtotal + taxAndFees + delivery
-    val itemCount = cartItems.sumOf { it.quantity }
-
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(Color.White)
-    ) {
-        // Scrollable cart + promo + price breakdown
-        Column(
+    Scaffold(
+        // The TopAppBar provides a fixed header that does not scroll.
+        topBar = {
+            TopAppBar(
+                title = { Text("Cart", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { /* TODO: Back navigation */ }) {
+                        Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.White,
+                    titleContentColor = Color.Black
+                )
+            )
+        },
+        // The bottomBar provides a robust "sticky footer" for the checkout button.
+        bottomBar = {
+            CheckoutBar(items = cartItems) {
+                // TODO: Handle checkout logic
+            }
+        },
+        containerColor = Color(0xFFF5F5F5) // A light gray background makes white cards pop.
+    ) { innerPadding ->
+        // LazyColumn is more performant than a simple Column with a scroll modifier.
+        LazyColumn(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 120.dp) // leave space for bottom bar
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            // Top bar
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 32.dp, start = 22.dp, end = 22.dp, bottom = 16.dp)
-            ) {
-                IconButton(onClick = { /* TODO: Back navigation */ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_back),
-                        contentDescription = "Back",
-                        tint = Color(0xFF111719)
+            itemsIndexed(
+                items = cartItems,
+                key = { _, item -> item.name } // A key helps Compose optimize updates.
+            ) { index, item ->
+                // This will animate each item fading and sliding in, one after another.
+                AnimatedVisibility(
+                    visible = isVisible,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 500, delayMillis = index * 100)) +
+                            slideInVertically(
+                                initialOffsetY = { 40 },
+                                animationSpec = tween(durationMillis = 500, delayMillis = index * 100)
+                            )
+                ) {
+                    CartItemCard(
+                        item = item,
+                        onIncrease = {
+                            cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity + 1) }
+                        },
+                        onDecrease = {
+                            if (item.quantity > 1) {
+                                cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity - 1) }
+                            } else {
+                                // If quantity is 1, decrease removes the item.
+                                cartItems = cartItems.toMutableList().apply { removeAt(index) }
+                            }
+                        },
+                        onRemove = {
+                            cartItems = cartItems.toMutableList().apply { removeAt(index) }
+                        }
                     )
                 }
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "Cart",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF111719)
-                )
-                Spacer(modifier = Modifier.weight(1f))
             }
 
-            // Cart items
-            cartItems.forEachIndexed { idx, item ->
-                CartItemRow(
-                    item = item,
-                    onIncrease = {
-                        val updatedItems = cartItems.toMutableList().apply {
-                            this[idx] = this[idx].copy(quantity = this[idx].quantity + 1)
-                        }
-                        cartItems = updatedItems
-                    },
-                    onDecrease = {
-                        if (item.quantity > 1) {
-                            val updatedItems = cartItems.toMutableList().apply {
-                                this[idx] = this[idx].copy(quantity = this[idx].quantity - 1)
-                            }
-                            cartItems = updatedItems
-                        } else {
-                            val updatedItems = cartItems.toMutableList().apply {
-                                removeAt(idx)
-                            }
-                            cartItems = updatedItems
-                        }
-                    },
-                    onRemove = {
-                        val updatedItems = cartItems.toMutableList().apply {
-                            removeAt(idx)
-                        }
-                        cartItems = updatedItems
-                    }
-                )
-                Spacer(modifier = Modifier.height(25.dp))
-            }
-
-            // Promo code section
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .padding(vertical = 10.dp, horizontal = 22.dp)
-            ) {
-                TextField(
-                    value = "",
-                    onValueChange = { /* TODO: Save code entry */ },
-                    placeholder = { Text("Promo Code", color = Color(0xFFBEBEBE)) },
-                    shape = RoundedCornerShape(28.5.dp),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFFF8F8FB),
-                        unfocusedContainerColor = Color(0xFFF8F8FB),
-                        disabledContainerColor = Color(0xFFF8F8FB),
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Color(0xFFFE724C)
-                    ),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(50.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Button(
-                    onClick = { /* TODO: Apply promo */ },
-                    shape = RoundedCornerShape(28.5.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
-                    modifier = Modifier.height(44.dp)
-                ) {
-                    Text("Apply", color = Color.White, fontSize = 16.sp)
-                }
-            }
-
-            Divider(
-                modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp),
-                color = Color(0xFFF1F2F3)
-            )
-
-            PriceRow(label = "Subtotal", value = subtotal)
-            PriceRow(label = "Tax and Fees", value = taxAndFees)
-            PriceRow(label = "Delivery", value = delivery)
-        }
-
-        // Total and Checkout: bottom sticky bar
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .background(
-                    color = Color.White,
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
-                )
-                .padding(vertical = 16.dp, horizontal = 22.dp)
-                .shadow(8.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Total",
-                    fontSize = 18.sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Medium
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    text = "$${String.format("%.2f", total)} USD",
-                    fontSize = 19.sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    " USD",
-                    fontSize = 15.sp,
-                    color = Color(0xFF9796A1),
-                    modifier = Modifier.padding(start = 2.dp)
-                )
-                Text(
-                    "  (${itemCount} items)",
-                    fontSize = 14.sp,
-                    color = Color(0xFFBEBEBE),
-                    modifier = Modifier.padding(start = 6.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = { /* TODO: Checkout */ },
-                shape = RoundedCornerShape(28.5.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(57.dp)
-            ) {
-                Text(
-                    "Checkout",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp
-                )
+            // Price Summary and Promo Code section
+            item {
+                PriceSummaryCard(items = cartItems)
             }
         }
     }
 }
 
 @Composable
-fun CartItemRow(
+fun CartItemCard(
     item: CartItem,
     onIncrease: () -> Unit,
     onDecrease: () -> Unit,
     onRemove: () -> Unit
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .padding(horizontal = 22.dp)
-            .fillMaxWidth()
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Image(
-            painter = painterResource(id = item.imageRes),
-            contentDescription = item.name,
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(14.dp))
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                item.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color.Black
-            )
-            Text(
-                item.description,
-                fontSize = 14.sp,
-                color = Color(0xFF8C8A9D)
-            )
-            Text(
-                "$${String.format("%.2f", item.price)}",
-                fontSize = 15.sp,
-                color = Color(0xFFFE724C),
-                fontWeight = FontWeight.Medium
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        // Quantity controls and Remove button
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(12.dp)
+                .fillMaxWidth()
         ) {
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier.size(28.dp)
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_close),
-                    contentDescription = "Remove ${item.name}",
-                    tint = Color(0xFFFE724C)
-                )
+            Image(
+                painter = painterResource(id = item.imageRes),
+                contentDescription = item.name,
+                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp))
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(item.name, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text(item.description, fontSize = 14.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("$${String.format("%.2f", item.price)}", fontSize = 16.sp, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
             }
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    onClick = onDecrease,
-                    shape = CircleShape,
-                    border = BorderStroke(1.dp, Color(0xFFFE724C)),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_minus),
-                        contentDescription = "Decrease quantity of ${item.name}",
-                        tint = Color(0xFFFE724C)
-                    )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                    Icon(painter = painterResource(id = R.drawable.ic_close), contentDescription = "Remove", tint = Color.Gray)
                 }
-                Text(
-                    text = item.quantity.toString().padStart(2, '0'),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier
-                        .padding(horizontal = 6.dp)
-                        .widthIn(min = 18.dp),
-                    textAlign = TextAlign.Center
-                )
-                Button(
-                    onClick = onIncrease,
-                    shape = CircleShape,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
-                    contentPadding = PaddingValues(0.dp),
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_plus),
-                        contentDescription = "Increase quantity of ${item.name}",
-                        tint = Color.White
-                    )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    SmallIconButton(onClick = onDecrease, iconRes = R.drawable.ic_minus)
+                    Text(text = item.quantity.toString(), fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 8.dp).widthIn(min = 20.dp), textAlign = TextAlign.Center)
+                    SmallIconButton(onClick = onIncrease, iconRes = R.drawable.ic_plus, isPrimary = true)
                 }
             }
         }
@@ -308,25 +162,120 @@ fun CartItemRow(
 }
 
 @Composable
-fun PriceRow(label: String, value: Float) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(horizontal = 22.dp, vertical = 4.dp)
+fun PriceSummaryCard(items: List<CartItem>) {
+    val subtotal = items.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
+    val taxAndFees = 5.30f // Example values
+    val delivery = 1.00f
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Text(label, fontSize = 16.sp, color = Color.Black)
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = "",
+                    onValueChange = {},
+                    placeholder = { Text("Promo Code", color = Color.Gray) },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedContainerColor = Color(0xFFF5F5F5),
+                        unfocusedBorderColor = Color.LightGray.copy(alpha = 0.5f)
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = { /* TODO */ }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color.Black)) {
+                    Text("Apply", color = Color.White)
+                }
+            }
+            Divider(modifier = Modifier.padding(vertical = 16.dp))
+            PriceRow(label = "Subtotal", value = subtotal)
+            PriceRow(label = "Tax and Fees", value = taxAndFees)
+            PriceRow(label = "Delivery", value = delivery)
+        }
+    }
+}
+
+@Composable
+fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
+    val subtotal = items.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
+    val total = subtotal + 5.30f + 1.00f // Replace with actual logic
+    val itemCount = items.sumOf { it.quantity }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Total", fontSize = 16.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("($itemCount items)", fontSize = 16.sp, color = Color.Gray)
+                Spacer(modifier = Modifier.weight(1f))
+                Text("$${String.format("%.2f", total)}", fontSize = 22.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = onCheckout,
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Text("Checkout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+// A helper composable for the small +/- buttons to reduce repetition.
+@Composable
+private fun SmallIconButton(onClick: () -> Unit, iconRes: Int, isPrimary: Boolean = false) {
+    Button(
+        onClick = onClick,
+        shape = CircleShape,
+        colors = if (isPrimary) ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+        else ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFE724C)),
+        border = if (!isPrimary) BorderStroke(1.dp, Color(0xFFFE724C).copy(alpha = 0.5f)) else null,
+        contentPadding = PaddingValues(0.dp),
+        modifier = Modifier.size(28.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = null,
+            tint = if (isPrimary) Color.White else Color(0xFFFE724C),
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+// A cleaner version of the price row.
+@Composable
+private fun PriceRow(label: String, value: Float) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label, fontSize = 16.sp, color = Color.Gray)
         Spacer(modifier = Modifier.weight(1f))
         Text(
             "$${String.format("%.2f", value)}",
-            fontSize = 18.sp,
+            fontSize = 16.sp,
             color = Color.Black,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            " USD",
-            fontSize = 14.sp,
-            color = Color(0xFF9796A1),
-            modifier = Modifier.padding(start = 2.dp)
+            fontWeight = FontWeight.SemiBold
         )
     }
-    Spacer(modifier = Modifier.height(22.dp))
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun CartScreenPreview() {
+    CartScreen()
 }

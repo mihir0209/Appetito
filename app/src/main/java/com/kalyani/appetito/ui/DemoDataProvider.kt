@@ -42,11 +42,11 @@ data class HistoryOrder(
 
 object DemoDataProvider {
     val user = DemoUser(
-        name = "Eljad Eendaz",
-        email = "prelookstudio@gmail.com",
-        phone = "+1 (783) 0986 8786",
-        balance = 1679.30f,
-        profileImageRes = R.drawable.ic_profile
+        name = "Kalyani Patil",
+        email = "patil.kalyani@gmail.com",
+        phone = "+91 9876543210",
+        balance = 902.29f,
+        profileImageRes = R.drawable.image_13
     )
 
     var cartItems by mutableStateOf(

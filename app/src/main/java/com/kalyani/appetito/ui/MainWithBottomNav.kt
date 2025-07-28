@@ -42,7 +42,10 @@ fun MainWithBottomNav(
                 // Here we call the REAL HomeScreen with the side-menu animation logic.
                 // We pass the mainNavController so the HomeScreen can navigate to other pages
                 // like MyOrders, AddAddress, etc., which are outside the bottom nav.
-                HomeScreen(mainNavController = mainNavController)
+                HomeScreen(
+                    nestedNavController = nestedNavController,
+                    mainNavController = mainNavController
+                )
             }
             composable(BottomNavTab.Category.route) {
                 CategoryScreen()
