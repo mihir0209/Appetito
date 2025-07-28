@@ -25,20 +25,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
-// A simple data class to represent a user's address.
-data class UserAddress(
-    val id: Int,
-    val fullName: String,
-    val mobileNumber: String,
-    val state: String,
-    val city: String,
-    val street: String
-)
-
-val savedAddresses = mutableStateListOf(
-    UserAddress(1, "Kalyani Patil", "+91 9876543210", "DYP", "Talsande", "Happi Street"),
-    UserAddress(2, "Kalyani Patil 2", "+91 9876543210", "DYP 2", "Talsande", "Happii Street")
-)
+// Note: The UserAddress data class and the local savedAddresses list have been removed from this file.
+// We will now use the single source of truth from DemoDataProvider.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,12 +41,18 @@ fun AddNewAddressScreen(
 
     var editingAddressId by remember { mutableStateOf<Int?>(null) }
 
-    fun populateFieldsForEdit(address: UserAddress) {
+    // This now correctly reads the list from the central provider.
+    val savedAddresses = DemoDataProvider.savedAddresses
+
+    // THE FIX: This function now correctly accepts the 'Address' data class.
+    fun populateFieldsForEdit(address: Address) {
         editingAddressId = address.id
-        fullName = address.fullName
-        mobileNumber = address.mobileNumber
-        state = address.state
-        city = address.city
+        // We will assume the fullAddress contains the name for this dummy data.
+        // In a real app, 'Address' would have a 'fullName' field.
+        fullName = address.fullAddress
+        mobileNumber = " " // Dummy data for now
+        state = address.cityState
+        city = address.cityState
         street = address.street
     }
 
@@ -92,7 +86,6 @@ fun AddNewAddressScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // --- Section for Saved Addresses ---
             Text("Saved Addresses", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
                 Column(modifier = Modifier.padding(8.dp)) {
@@ -115,16 +108,9 @@ fun AddNewAddressScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            AnimatedVisibility(
-                visible = true, // Can be used to show/hide the form
-                enter = fadeIn(tween(300))
-            ) {
+            AnimatedVisibility(visible = true) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(
-                        text = if (editingAddressId == null) "Add a New Address" else "Edit Address",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(text = if (editingAddressId == null) "Add a New Address" else "Edit Address", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     AddressTextField(label = "Full Name", value = fullName, onValueChange = { fullName = it })
                     AddressTextField(label = "Mobile Number", value = mobileNumber, onValueChange = { mobileNumber = it }, keyboardType = KeyboardType.Phone)
                     AddressTextField(label = "State", value = state, onValueChange = { state = it })
@@ -133,21 +119,29 @@ fun AddNewAddressScreen(
 
                     Button(
                         onClick = {
-                            // TODO: Add actual save/update logic here
+                            if (editingAddressId == null) {
+                                val newId = (DemoDataProvider.savedAddresses.maxOfOrNull { it.id } ?: 0) + 1
+                                // THE FIX: Correctly creating the 'Address' object.
+                                // In a real app, 'fullName' would be a field in the Address class.
+                                // For now, we'll construct the fullAddress from other fields.
+                                DemoDataProvider.savedAddresses.add(
+                                    Address(
+                                        id = newId,
+                                        street = street,
+                                        cityState = "$city, $state",
+                                        fullAddress = fullName // Using the fullName from the text field
+                                    )
+                                )
+                            } else {
+                                // TODO: Implement update logic
+                            }
                             navController.popBackStack()
-                                  },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        },
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
                     ) {
-                        Text(
-                            text = if (editingAddressId == null) "SAVE ADDRESS" else "UPDATE ADDRESS",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                        Text(text = if (editingAddressId == null) "SAVE ADDRESS" else "UPDATE ADDRESS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             }
@@ -156,7 +150,8 @@ fun AddNewAddressScreen(
 }
 
 @Composable
-private fun AddressRow(address: UserAddress, onEdit: () -> Unit) {
+// THE FIX: This function now correctly accepts the 'Address' data class.
+private fun AddressRow(address: Address, onEdit: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,15 +159,14 @@ private fun AddressRow(address: UserAddress, onEdit: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(address.fullName, fontWeight = FontWeight.Bold)
-            Text("${address.street}, ${address.city}, ${address.state}", color = Color.Gray)
+            Text(address.fullAddress, fontWeight = FontWeight.Bold) // Display the main address line
+            Text(address.cityState, color = Color.Gray) // Display the city/state
         }
         TextButton(onClick = onEdit) {
             Text("Edit", color = Color(0xFFFE724C))
         }
     }
 }
-
 
 @Composable
 private fun AddressTextField(

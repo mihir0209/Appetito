@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
@@ -43,11 +42,7 @@ fun HomeScreen(
     mainNavController: NavHostController
 ) {
     var menuOpen by remember { mutableStateOf(false) }
-    val animationProgress by animateFloatAsState(
-        targetValue = if (menuOpen) 1f else 0f,
-        animationSpec = tween(durationMillis = 400),
-        label = "menuAnimation"
-    )
+    val animationProgress by animateFloatAsState(targetValue = if (menuOpen) 1f else 0f, animationSpec = tween(durationMillis = 400), label = "menuAnimation")
     val scale = lerp(1f, 0.7f, animationProgress)
     val translationXInDp = 280.dp
     val translationXInPx = with(LocalDensity.current) { translationXInDp.toPx() }
@@ -56,11 +51,7 @@ fun HomeScreen(
     val shadowElevation = lerp(0f, 24f, animationProgress)
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFE724C).copy(alpha = 0.9f))) {
-        SideMenuFigma(
-            modifier = Modifier.fillMaxHeight().width(280.dp),
-            mainNavController = mainNavController,
-            nestedNavController = nestedNavController
-        )
+        SideMenuFigma(modifier = Modifier.fillMaxHeight().width(280.dp), mainNavController = mainNavController, nestedNavController = nestedNavController)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,18 +60,9 @@ fun HomeScreen(
                     this.shadowElevation = shadowElevation; this.transformOrigin = TransformOrigin(0f, 0.5f)
                 }
                 .clip(RoundedCornerShape(cornerRadius.roundToInt().dp))
-                .clickable(
-                    enabled = menuOpen,
-                    onClick = { menuOpen = false },
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() }
-                )
+                .clickable(enabled = menuOpen, onClick = { menuOpen = false }, indication = null, interactionSource = remember { MutableInteractionSource() })
         ) {
-            HomeScreenContent(
-                onMenuClick = { menuOpen = !menuOpen },
-                nestedNavController = nestedNavController,
-                mainNavController = mainNavController
-            )
+            HomeScreenContent(onMenuClick = { menuOpen = !menuOpen }, nestedNavController = nestedNavController, mainNavController = mainNavController)
         }
     }
 }
@@ -96,15 +78,18 @@ fun HomeScreenContent(
 ) {
     val sheetState = rememberModalBottomSheetState()
     var showAddressSheet by remember { mutableStateOf(false) }
-    val addresses = remember { listOf("DYP, Talsande", "Gangapur", "Gargoti") }
-    var selectedAddress by remember { mutableStateOf(addresses.first()) }
+
+    // THE FIX: Use the Address objects from the central provider.
+    val addresses = DemoDataProvider.savedAddresses
+    // THE FIX: Use the correct property delegate reference syntax.
+    var selectedAddress by DemoDataProvider::selectedAddress
+
+    val featuredRestaurants = DemoDataProvider.featuredRestaurants
+    val popularItems = DemoDataProvider.popularItems
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(rememberScrollState())
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -119,7 +104,8 @@ fun HomeScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Deliver to", color = Color.Gray, fontSize = 12.sp)
-                        Text(selectedAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        // THE FIX: Correctly access the 'fullAddress' property.
+                        Text(selectedAddress.fullAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = Color(0xFFFE724C), modifier = Modifier.size(20.dp).padding(start = 4.dp))
                 }
@@ -127,7 +113,6 @@ fun HomeScreenContent(
                 Image(painter = painterResource(id = R.drawable.image_13), contentDescription = "Profile", modifier = Modifier.size(48.dp).clip(CircleShape).clickable { nestedNavController.navigate(BottomNavTab.Profile.route) })
             }
 
-            // --- ALL CONTENT SECTIONS ARE RESTORED HERE ---
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(text = "What would you like to order?", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 36.sp, color = Color.Black)
@@ -144,9 +129,7 @@ fun HomeScreenContent(
             }
             Spacer(modifier = Modifier.height(24.dp))
             Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                CategoryChip("Burger", R.drawable.img_burger, selected = true)
-                CategoryChip("Donat", R.drawable.img_burger); CategoryChip("Pizza", R.drawable.img_burger)
-                CategoryChip("Mexican", R.drawable.img_burger); CategoryChip("Asian", R.drawable.img_burger)
+                CategoryChip("Burger", R.drawable.img_burger, selected = true); CategoryChip("Donat", R.drawable.img_burger); CategoryChip("Pizza", R.drawable.img_burger); CategoryChip("Mexican", R.drawable.img_burger); CategoryChip("Asian", R.drawable.img_burger)
             }
             Spacer(modifier = Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -156,8 +139,9 @@ fun HomeScreenContent(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    RestaurantCard("McDonald's", R.drawable.mcdonalds_img, 4.9f, onClick = { mainNavController.navigate("food_details/mcdonalds") })
-                    RestaurantCard("Starbucks", R.drawable.starbucks_img, 4.7f, onClick = { mainNavController.navigate("food_details/starbucks") })
+                    featuredRestaurants.forEach { restaurant ->
+                        RestaurantCard(name = restaurant.name, description = restaurant.description, deliveryInfo = restaurant.deliveryInfo, imageRes = restaurant.imageRes, rating = restaurant.rating, onClick = { mainNavController.navigate("food_details/${restaurant.id}") })
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -165,20 +149,24 @@ fun HomeScreenContent(
                 Text("Popular Items", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    PopularItemCard("Cheese Burger", "Burger King", "$5.50", R.drawable.img_burger, onClick = { mainNavController.navigate("food_details/cheese_burger") })
-                    PopularItemCard("Toffee's Cake", "Top Cake", "$8.25", R.drawable.cake_img, onClick = { mainNavController.navigate("food_details/toffee_cake") })
+                    popularItems.forEach { item ->
+                        PopularItemCard(name = item.name, restaurant = item.restaurantName, price = "$${String.format("%.2f", item.price)}", imageRes = item.imageRes, onClick = { mainNavController.navigate("food_details/${item.id}") })
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // FIX: The ModalBottomSheet is now a direct child of the Box, outside the scrollable Column.
         if (showAddressSheet) {
             ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
                 Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
                     Text("Select Address", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(16.dp))
                     addresses.forEach { address ->
-                        AddressListItem(address = address, isSelected = address == selectedAddress, onClick = { selectedAddress = address; showAddressSheet = false })
+                        // THE FIX: Correctly access the 'id' property.
+                        AddressListItem(address = address, isSelected = address.id == selectedAddress.id, onClick = {
+                            DemoDataProvider.selectedAddress = address
+                            showAddressSheet = false
+                        })
                     }
                     HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                     Row(
@@ -195,38 +183,33 @@ fun HomeScreenContent(
     }
 }
 
-// FIX: This helper composable is now defined at the top level of the file.
 @Composable
-private fun AddressListItem(address: String, isSelected: Boolean, onClick: () -> Unit) {
+private fun AddressListItem(address: Address, isSelected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(painter = painterResource(id = R.drawable.ic_location), contentDescription = null, tint = if (isSelected) Color(0xFFFE724C) else Color.Gray, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = address, modifier = Modifier.weight(1f), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+        Text(text = address.fullAddress, modifier = Modifier.weight(1f), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
         RadioButton(selected = isSelected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFE724C)))
     }
 }
 
 @Composable
-fun SideMenuFigma(
-    modifier: Modifier = Modifier,
-    mainNavController: NavHostController,
-    nestedNavController: NavHostController
-) {
+fun SideMenuFigma(modifier: Modifier = Modifier, mainNavController: NavHostController, nestedNavController: NavHostController) {
+    val user = DemoDataProvider.user
     Column(modifier = modifier.background(Color.White).padding(24.dp)) {
         Spacer(modifier = Modifier.height(40.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(painterResource(id = R.drawable.image_13), "Profile", modifier = Modifier.size(64.dp).clip(CircleShape))
+            Image(painterResource(id = user.profileImageRes), "Profile", modifier = Modifier.size(64.dp).clip(CircleShape))
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text("Kalyani Patil", fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Black)
-                Text("patil.kalyanii0209@gmail.com", fontSize = 14.sp, color = Color.Gray)
+                Text(user.name, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Black)
+                Text(user.email, fontSize = 14.sp, color = Color.Gray)
             }
         }
         Spacer(modifier = Modifier.height(48.dp))
-
         SideMenuItemFigma("My Orders", R.drawable.ic_order, onClick = { mainNavController.navigate("orders") })
         SideMenuItemFigma("My Profile", R.drawable.ic_profile, onClick = { nestedNavController.navigate(BottomNavTab.Profile.route) })
         SideMenuItemFigma("Delivery Address", R.drawable.ic_location, onClick = { mainNavController.navigate("add_address") })
@@ -234,17 +217,9 @@ fun SideMenuFigma(
         SideMenuItemFigma("Contact Us", R.drawable.ic_message, onClick = { mainNavController.navigate("contact_us") })
         SideMenuItemFigma("Settings", R.drawable.ic_settings, onClick = { mainNavController.navigate("settings") })
         SideMenuItemFigma("Helps & FAQs", R.drawable.ic_help, onClick = { mainNavController.navigate("help") })
-
         Spacer(modifier = Modifier.weight(1f))
         Button(
-            onClick = {
-                mainNavController.navigate("login") {
-                     popUpTo("main_app") {
-                        inclusive = true
-                    }
-                    launchSingleTop = true
-                }
-            },
+            onClick = { mainNavController.navigate("login") { popUpTo("main_app") { inclusive = true }; launchSingleTop = true } },
             shape = RoundedCornerShape(28.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
             modifier = Modifier.fillMaxWidth()
@@ -285,25 +260,16 @@ fun CategoryChip(name: String, imageRes: Int, selected: Boolean = false) {
 }
 
 @Composable
-fun RestaurantCard(name: String, imageRes: Int, rating: Float, onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.width(280.dp).height(200.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-    ) {
+fun RestaurantCard(name: String, description: String, deliveryInfo: String, imageRes: Int, rating: Float, onClick: () -> Unit) {
+    Card(onClick = onClick, shape = RoundedCornerShape(24.dp), modifier = Modifier.width(280.dp).height(200.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
         Box {
             Image(painter = painterResource(id = imageRes), contentDescription = name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
             Column(modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
                 Text(name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
-                Text("Burger • Chicken • Fast Food", color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
+                Text(description, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    Text("Free delivery", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("10-15 mins", color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
-                }
+                Text(deliveryInfo, color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
             }
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).background(Color.White, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
                 Icon(Icons.Default.Star, "Star", tint = Color(0xFFFFC529), modifier = Modifier.size(12.dp))
