@@ -2,17 +2,17 @@
 
 Welcome to Appetito, a modern food delivery application UI built entirely with Jetpack Compose and Kotlin. This project showcases a complete user flow, from onboarding and authentication to browsing food, placing an order, and managing user profiles. A key feature of this app is its dynamic theming system, allowing users to switch between a clean light mode and a sleek dark mode, with their preference saved across app sessions.
 
-## 📸 Screenshots & Demo
+## Screenshots & Demo
 
 *(You should replace these placeholder links with actual screenshots and a screen recording of your app)*
 
-| Light Mode | Dark Mode |
-| :---: | :---: |
-| ![Light Mode](https://via.placeholder.com/300x650.png?text=Appetito+Light+Mode) | ![Dark Mode](https://via.placeholder.com/300x650.png?text=Appetito+Dark+Mode) |
+|                            Light Mode                            |                           Dark Mode                            |
+|:----------------------------------------------------------------:|:--------------------------------------------------------------:|
+| ![Home_Screen_Light_theme](Project_Demo/Home_Screen_Light_theme) | ![Home_Screen_Dark_theme](Project_Demo/Home_Screen_Dark_theme) |
 
 **Animated Side Menu & Navigation GIF:**
 
-![App Demo GIF](https://via.placeholder.com/600x400.png?text=App+Interaction+GIF)
+![Demo_Video](Project_Demo/demo_video.mp4)
 
 ---
 
@@ -48,7 +48,7 @@ This project is a comprehensive demonstration of building a feature-rich UI in J
 
 ---
 
-## 🛠️ Technical Implementation
+## 🛠Technical Implementation
 
 -   **UI:** Built 100% in **Kotlin** with **Jetpack Compose**, using a single-activity architecture.
 -   **Theming:** Implemented a custom `AppetitoTheme` using `MaterialTheme` and `Material 3` components. Colors are defined in `ui/Theme.kt` and dynamically applied.
@@ -59,13 +59,13 @@ This project is a comprehensive demonstration of building a feature-rich UI in J
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 To get this project running on your local machine, follow these simple steps:
 
 1.  **Clone the repository:**
     ```bash
-    git clone https://github.com/your-username/appetito.git
+    git clone https://github.com/mihir0209/appetito.git
     ```
 2.  **Open in Android Studio:**
     -   Open Android Studio (latest stable version recommended).
@@ -77,7 +77,7 @@ To get this project running on your local machine, follow these simple steps:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 The codebase is organized logically within the `ui` package, making it easy to navigate and understand.
 
@@ -90,7 +90,7 @@ The codebase is organized logically within the `ui` package, making it easy to n
     ├── CategoryScreen.kt           # Food category/menu view
     ├── CheckoutScreen.kt           # Order checkout process
     ├── ContactUsScreen.kt          # Contact information
-    ├── DemoDataProvider.kt         # Central source for all sample data
+    ├── DemoDataProvider.kt         # Central source for all sample data, can be used for integrating database
     ├── FavoritesFoodItemsScreen.kt # User's favorite items
     ├── FoodDetailsScreen.kt        # Detailed view of a food item
     ├── HelpsFaqsScreen.kt          # Help and FAQ section

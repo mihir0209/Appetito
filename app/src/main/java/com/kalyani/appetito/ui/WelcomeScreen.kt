@@ -1,5 +1,6 @@
 package ui
 
+import android.graphics.Color.rgb
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -34,155 +35,176 @@ fun WelcomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        // 1. Background Image
         Image(
-            painter = painterResource(R.drawable.welcome_bg),
+            painter = painterResource(R.drawable.welcome_bg), // Ensure you have this drawable
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize()
         )
 
-        // The dark gradient overlay is a design choice that works for both themes.
+        // 2. Gradient Overlay (from end to start)
+        // This gradient is transparent at the top 40% and fades to a dark color at the bottom.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.3f),
-                            Color.Black.copy(alpha = 0.6f)
-                        ),
-                        startY = 0f,
-                        endY = Float.POSITIVE_INFINITY
+                        colors = listOf(Color.Transparent, Color(rgb(25, 27, 47)).copy(alpha = 1.3f)),
+                        startY = 20f // Starts the fade effect further down the screen
                     )
                 )
         )
 
-        // The Skip button should be theme-aware.
-        Button(
-            onClick = onSkip,
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary
-            ),
-            elevation = ButtonDefaults.buttonElevation(4.dp),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 50.dp, end = 24.dp)
-        ) {
-            Text("Skip", fontSize = 14.sp, fontWeight = FontWeight.Medium)
-        }
-
-        // This content sits on a light part of the background image.
+        // Main content column for robust layout
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 25.dp, vertical = 300.dp), // Adjusted padding
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(top = 50.dp, bottom = 30.dp)
         ) {
-            Text(
-                buildAnnotatedString {
-                    withStyle(
-                        SpanStyle(
-                            // This text should contrast with the light background image part
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 46.sp
-                        )
-                    ) {
-                        append("Welcome to\n")
-                    }
-                    withStyle(
-                        SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 36.sp,
-                        )
-                    ) {
-                        append("Appetito")
-                    }
-                },
-                lineHeight = 42.sp,
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                "Your favourite foods delivered\nfast at your door.",
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
-                fontSize = 16.sp,
-                textAlign = TextAlign.Center,
-                lineHeight = 22.sp
-            )
-        }
+            // 3. Skip Button
+            Button(
+                onClick = onSkip,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(4.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(end = 24.dp)
+            ) {
+                Text("Skip", fontSize = 14.sp, fontWeight = FontWeight.Medium)
+            }
 
-        // This content sits on the dark gradient overlay.
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .padding(horizontal = 32.dp, vertical = 30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(80.dp))
+
+            // 4. Welcome Text Block
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 25.dp),
+                horizontalAlignment = Alignment.Start // Align text to the left/start
             ) {
-                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
-                Text("  sign in with  ", color = Color.White, fontSize = 14.sp)
-                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
+                Text(
+                    buildAnnotatedString {
+                        withStyle(
+                            SpanStyle(
+                                color = Color(0xFF333333), // A dark gray for good contrast on the image
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 52.sp
+                            )
+                        ) {
+                            append("Welcome to\n")
+                        }
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary, // Use theme's primary color
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 48.sp,
+                            )
+                        ) {
+                            append("Appetito")
+                        }
+                    },
+                    lineHeight = 50.sp,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Your favourite foods delivered\nfast at your door.",
+                    color = Color(0xFF555555), // A softer gray for the tagline
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 22.sp
+                )
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
+
+            // This spacer pushes the login controls to the bottom
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 5. Login Controls Block (always on the dark gradient)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Social login buttons are theme-aware.
-                Button(
-                    onClick = onFacebook,
-                    shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = ButtonDefaults.buttonElevation(4.dp),
-                    modifier = Modifier.weight(1f).height(56.dp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Image(painter = painterResource(id = R.drawable.facebook_icon), contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("FACEBOOK", color = Color(0xFF1877F3), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
+                    Text("  sign in with  ", color = Color.White, fontSize = 14.sp)
+                    Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
                 }
-                Button(
-                    onClick = onGoogle,
-                    shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = ButtonDefaults.buttonElevation(4.dp),
-                    modifier = Modifier.weight(1f).height(56.dp)
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Image(painter = painterResource(id = R.drawable.google_icon), contentDescription = null, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("GOOGLE", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    // Facebook & Google buttons remain theme-aware
+                    SocialButton(
+                        text = "FACEBOOK",
+                        iconRes = R.drawable.facebook_icon,
+                        textColor = Color(0xFF1877F3),
+                        onClick = onFacebook,
+                        modifier = Modifier.weight(1f)
+                    )
+                    SocialButton(
+                        text = "GOOGLE",
+                        iconRes = R.drawable.google_icon,
+                        textColor = MaterialTheme.colorScheme.onSurface,
+                        onClick = onGoogle,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-            }
-            Spacer(modifier = Modifier.height(20.dp))
-            OutlinedButton(
-                onClick = onEmailOrPhone,
-                shape = RoundedCornerShape(50.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(2.dp, Color.White),
-                modifier = Modifier.fillMaxWidth().height(56.dp)
-            ) {
-                Text("Start with email or phone", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-            Spacer(modifier = Modifier.height(32.dp))
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Already have an account? ", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
-                Text("Sign In", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onSignIn))
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedButton(
+                    onClick = onEmailOrPhone,
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(2.dp, Color.White),
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text("Start with email or phone", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Already have an account? ", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                    Text("Sign In", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onSignIn))
+                }
             }
         }
     }
 }
+
+// Helper composable for social buttons to reduce repetition
+@Composable
+private fun SocialButton(
+    text: String,
+    iconRes: Int,
+    textColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(50.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = ButtonDefaults.buttonElevation(4.dp),
+        modifier = modifier.height(56.dp)
+    ) {
+        Image(painter = painterResource(id = iconRes), contentDescription = null, modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text, color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+    }
+}
+
 
 @Preview(showBackground = true, name = "Welcome Screen")
 @Composable

@@ -11,7 +11,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 // --- Color Definitions ---
-
+val DarkBlue = Color(0xFF002244)
+val MidnightBlue = Color(0xFF0A2342)
 private val LightColors = lightColorScheme(
     primary = Color(0xFFFE724C),    // Main brand color
     onPrimary = Color.White,        // Text/icons on primary color
