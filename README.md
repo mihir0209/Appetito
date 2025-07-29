@@ -10,7 +10,7 @@ Welcome to Appetito, a modern food delivery application UI built entirely with J
 |:----------------------------------------------------------------:|:--------------------------------------------------------------:|
 | ![Home_Screen_Light_theme](Project_Demo/Home_Screen_Light_theme) | ![Home_Screen_Dark_theme](Project_Demo/Home_Screen_Dark_theme) |
 
-**Animated Side Menu & Navigation GIF:**
+**Complete video demo of the app's frontend:**
 
 [Click here to watch the demo](https://drive.google.com/file/d/1Piz-pfCeEZfgs6J4CYrJdIjC0ALnMhb_/view?usp=sharing)
 
