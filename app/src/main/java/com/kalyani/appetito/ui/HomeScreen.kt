@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -51,7 +53,22 @@ fun HomeScreen(
     val shadowElevation = lerp(0f, 24f, animationProgress)
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFE724C).copy(alpha = 0.9f))) {
-        SideMenuFigma(modifier = Modifier.fillMaxHeight().width(280.dp), mainNavController = mainNavController, nestedNavController = nestedNavController)
+        SideMenuFigma(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(280.dp)
+                // THE FIX: The swipe-to-close gesture is restored here.
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures { change, dragAmount ->
+                        if (dragAmount < -5) { // Swipe right-to-left
+                            menuOpen = false
+                            change.consume()
+                        }
+                    }
+                },
+            mainNavController = mainNavController,
+            nestedNavController = nestedNavController
+        )
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -60,6 +77,21 @@ fun HomeScreen(
                     this.shadowElevation = shadowElevation; this.transformOrigin = TransformOrigin(0f, 0.5f)
                 }
                 .clip(RoundedCornerShape(cornerRadius.roundToInt().dp))
+                // THE FIX: The swipe-to-open gesture is restored here.
+                .pointerInput(menuOpen) {
+                    if (!menuOpen) {
+                        var dragStartedOnEdge = false
+                        detectHorizontalDragGestures(
+                            onDragStart = { offset -> dragStartedOnEdge = offset.x < 40.dp.toPx() },
+                            onHorizontalDrag = { change, dragAmount ->
+                                if (dragStartedOnEdge && dragAmount > 0) { // Swipe left-to-right from edge
+                                    menuOpen = true
+                                    change.consume()
+                                }
+                            }
+                        )
+                    }
+                }
                 .clickable(enabled = menuOpen, onClick = { menuOpen = false }, indication = null, interactionSource = remember { MutableInteractionSource() })
         ) {
             HomeScreenContent(onMenuClick = { menuOpen = !menuOpen }, nestedNavController = nestedNavController, mainNavController = mainNavController)
@@ -79,7 +111,11 @@ fun HomeScreenContent(
     val sheetState = rememberModalBottomSheetState()
     var showAddressSheet by remember { mutableStateOf(false) }
     val addresses = DemoDataProvider.savedAddresses
-    var selectedAddress by DemoDataProvider::selectedAddress
+
+    // THE FIX: Get the state object, but also get its value for easy use.
+    val selectedAddressState = DemoDataProvider.selectedAddress
+    val selectedAddress = selectedAddressState.value
+
     val featuredRestaurants = DemoDataProvider.featuredRestaurants
     val popularItems = DemoDataProvider.popularItems
 
@@ -100,6 +136,7 @@ fun HomeScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Deliver to", color = Color.Gray, fontSize = 12.sp)
+                        // THE FIX: Correctly access the 'fullAddress' property from the value.
                         Text(selectedAddress.fullAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = Color(0xFFFE724C), modifier = Modifier.size(20.dp).padding(start = 4.dp))
@@ -171,9 +208,11 @@ fun HomeScreenContent(
             ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
                 AddressSheetContent(
                     addresses = addresses,
+                    // THE FIX: Pass the address object (the .value) to the sheet.
                     selectedAddress = selectedAddress,
                     onAddressSelected = { newAddress ->
-                        selectedAddress = newAddress
+                        // THE FIX: Update the .value of the state object.
+                        selectedAddressState.value = newAddress
                         showAddressSheet = false
                     },
                     onAddNewAddress = {

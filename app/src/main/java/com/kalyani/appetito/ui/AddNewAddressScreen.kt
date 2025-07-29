@@ -34,14 +34,12 @@ fun AddNewAddressScreen(
     var city by remember { mutableStateOf("") }
     var street by remember { mutableStateOf("") }
     var editingAddressId by remember { mutableStateOf<Int?>(null) }
-
     val savedAddresses = DemoDataProvider.savedAddresses
 
     fun populateFieldsForEdit(address: Address) {
         editingAddressId = address.id
-        // THE FIX: Now correctly populates from the right fields.
         fullName = address.fullName
-        mobileNumber = "+91 9876543210" // Placeholder mobile
+        mobileNumber = address.mobileNumber
         val cityStateParts = address.cityState.split(",").map { it.trim() }
         city = cityStateParts.getOrElse(0) { "" }
         state = cityStateParts.getOrElse(1) { "" }
@@ -49,33 +47,21 @@ fun AddNewAddressScreen(
     }
 
     fun clearFieldsForNew() {
-        editingAddressId = null
-        fullName = ""
-        mobileNumber = ""
-        state = ""
-        city = ""
-        street = ""
+        editingAddressId = null; fullName = ""; mobileNumber = ""; state = ""; city = ""; street = ""
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Manage Addresses", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
+                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = Color.Black)
             )
         },
         containerColor = Color(0xFFF9F9F9)
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.padding(innerPadding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Saved Addresses", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -86,21 +72,12 @@ fun AddNewAddressScreen(
                     }
                 }
             }
-
-            // THE FIX: This button's ONLY job is to clear the fields.
-            OutlinedButton(
-                onClick = { clearFieldsForNew() },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(1.dp, Color(0xFFFE724C))
-            ) {
+            OutlinedButton(onClick = { clearFieldsForNew() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFFE724C))) {
                 Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFFE724C))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Add New Address", color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
             }
-
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
             AnimatedVisibility(visible = true) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Text(text = if (editingAddressId == null) "Add a New Address" else "Edit Address", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
@@ -109,24 +86,15 @@ fun AddNewAddressScreen(
                     AddressTextField(label = "State", value = state, onValueChange = { state = it })
                     AddressTextField(label = "City", value = city, onValueChange = { city = it })
                     AddressTextField(label = "Street (Include house number)", value = street, onValueChange = { street = it })
-
-                    // THE FIX: The SAVE logic is now in the correct button.
                     Button(
                         onClick = {
                             if (editingAddressId == null) {
                                 val newId = (DemoDataProvider.savedAddresses.maxOfOrNull { it.id } ?: 0) + 1
-                                val newAddress = Address(
-                                    id = newId,
-                                    fullName = fullName,
-                                    street = street,
-                                    cityState = "$city, $state",
-                                    fullAddress = "$street, $city"
-                                )
+                                val newAddress = Address(id = newId, fullName = fullName, mobileNumber = mobileNumber, street = street, cityState = "$city, $state", fullAddress = "$street, $city")
                                 DemoDataProvider.savedAddresses.add(newAddress)
-                                DemoDataProvider.selectedAddress = newAddress
-                            } else {
-                                // TODO: Implement update logic here by finding the item by ID and replacing it.
-                            }
+                                // THE FIX: Assign the new address to the .value of the state holder.
+                                DemoDataProvider.selectedAddress.value = newAddress
+                            } else { /* TODO: Implement update logic */ }
                             navController.popBackStack()
                         },
                         modifier = Modifier.fillMaxWidth().height(52.dp),
@@ -150,7 +118,6 @@ private fun AddressRow(address: Address, onEdit: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            // THE FIX: Now correctly uses the 'fullName' and 'fullAddress' fields.
             Text(address.fullName, fontWeight = FontWeight.Bold)
             Text(address.fullAddress, color = Color.Gray)
         }

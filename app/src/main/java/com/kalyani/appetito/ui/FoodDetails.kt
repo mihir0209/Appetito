@@ -163,8 +163,6 @@ fun AddOnRow(addOn: AddOn, isSelected: Boolean, onSelect: (Boolean) -> Unit) {
     }
 }
 
-// In ui/FoodDetailsScreen.kt
-
 @Composable
 private fun AddToCartBar(
     foodItem: FoodItemDetails,
@@ -175,12 +173,7 @@ private fun AddToCartBar(
 ) {
     val totalAddOnPrice = selectedAddOns.sumOf { it.price.toDouble() }.toFloat()
     val totalPrice = (foodItem.price + totalAddOnPrice) * quantity
-
-    LaunchedEffect(isAddedToCart) {
-        if (isAddedToCart) {
-            delay(2000)
-        }
-    }
+    LaunchedEffect(isAddedToCart) { if (isAddedToCart) { delay(2000) } }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -199,10 +192,10 @@ private fun AddToCartBar(
                 label = "AddToCartButtonAnimation"
             ) { added ->
                 Button(
-                    // THE FIX: The onClick now calls the central provider function
+                    // This call is now valid because DemoDataProvider.addToCart exists.
                     onClick = {
                         DemoDataProvider.addToCart(foodItem, quantity, selectedAddOns)
-                        onAddToCart() // This just triggers the UI change to "Added!"
+                        onAddToCart()
                     },
                     enabled = !added,
                     shape = RoundedCornerShape(12.dp),

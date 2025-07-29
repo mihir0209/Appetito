@@ -206,9 +206,10 @@ fun PriceSummaryCard(items: List<CartItem>) {
     }
 }
 
+// In ui/CartScreen.kt
+
 @Composable
 fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
-    // No need to calculate total here anymore, simplifying the component.
     val itemCount = items.sumOf { it.quantity }
 
     Card(
@@ -218,29 +219,28 @@ fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // THE FIX: The total price is removed to avoid confusion.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Total Items",
-                    fontSize = 16.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = "$itemCount",
-                    fontSize = 22.sp,
-                    color = Color.Black,
-                    fontWeight = FontWeight.Bold
-                )
+                Text("Total Items", fontSize = 16.sp, color = Color.Gray, modifier = Modifier.weight(1f))
+                Text(text = "$itemCount", fontSize = 22.sp, color = Color.Black, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = onCheckout,
+                // THE FIX: The button is disabled if the cart is empty.
+                enabled = items.isNotEmpty(),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFE724C),
+                    disabledContainerColor = Color.Gray.copy(alpha = 0.5f)
+                ),
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Proceed to Checkout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (items.isNotEmpty()) "Proceed to Checkout" else "Cart is Empty",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
