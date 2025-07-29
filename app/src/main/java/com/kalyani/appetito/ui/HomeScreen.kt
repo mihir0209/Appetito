@@ -165,7 +165,7 @@ fun HomeScreenContent(
             Row(modifier = Modifier
                 .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                CategoryChip("Burger", R.drawable.img_burger, selected = true); CategoryChip("Donat", R.drawable.img_burger); CategoryChip("Pizza", R.drawable.img_burger); CategoryChip("Mexican", R.drawable.img_burger); CategoryChip("Asian", R.drawable.img_burger)
+                CategoryChip("Burger", R.drawable.img_burger, selected = true); CategoryChip("Donat", R.drawable.img_donat); CategoryChip("Pizza", R.drawable.img_pizza); CategoryChip("Mexican", R.drawable.img_mexican); CategoryChip("Asian", R.drawable.img_asian)
             }
             Spacer(modifier = Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
