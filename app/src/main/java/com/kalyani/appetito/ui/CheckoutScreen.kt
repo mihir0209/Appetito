@@ -27,6 +27,18 @@ private enum class PaymentOption { CARD, UPI, NET_BANKING, COD }
 fun CheckoutScreen(navController: NavHostController) {
     var selectedPaymentOption by remember { mutableStateOf(PaymentOption.CARD) }
 
+    // THE FIX: Read data directly from the central provider
+    val addresses = DemoDataProvider.savedAddresses
+    var selectedAddress by DemoDataProvider::selectedAddress
+    val cartItems = DemoDataProvider.cartItems
+    val sheetState = rememberModalBottomSheetState()
+    var showAddressSheet by remember { mutableStateOf(false) }
+    // Calculate totals dynamically from the cart items
+    val subtotal = cartItems.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
+    val deliveryFee = 1.00f
+    val taxAndFees = subtotal * 0.08f // Example: 8% tax
+    val total = subtotal + deliveryFee + taxAndFees
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -36,9 +48,14 @@ fun CheckoutScreen(navController: NavHostController) {
             )
         },
         bottomBar = {
-            PlaceOrderBar(onClick = {
-                navController.navigate("order_success")
-            })
+            PlaceOrderBar(
+                totalPrice = total,
+                onClick = {
+                    // THE FIX: Clear the cart before navigating
+                    DemoDataProvider.cartItems.clear()
+                    navController.navigate("order_success")
+                }
+            )
         },
         containerColor = Color(0xFFF5F5F5)
     ) { innerPadding ->
@@ -51,41 +68,87 @@ fun CheckoutScreen(navController: NavHostController) {
                 CheckoutSection(title = "Delivery Address") {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("4102 Pretty View Lane", fontWeight = FontWeight.SemiBold)
-                            Text("Los Angeles, CA", color = Color.Gray, fontSize = 14.sp)
+                            Text(selectedAddress.fullAddress, fontWeight = FontWeight.SemiBold)
+                            Text(selectedAddress.cityState, color = Color.Gray, fontSize = 14.sp)
                         }
-                        TextButton(onClick = { /* TODO */ }) { Text("Change", color = Color(0xFFFE724C)) }
+                        // THE FIX: This button now opens the bottom sheet.
+                        TextButton(onClick = { showAddressSheet = true }) {
+                            Text("Change", color = Color(0xFFFE724C))
+                        }
                     }
                 }
             }
             item {
                 CheckoutSection(title = "Order Summary") {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // This now works because PriceRow is public
-                        PriceRow(label = "Subtotal", value = 54.60f)
-                        PriceRow(label = "Tax and Fees", value = 5.30f)
-                        PriceRow(label = "Delivery", value = 1.00f)
+                        // THE FIX: All prices are now calculated dynamically
+                        PriceRow(label = "Subtotal", value = subtotal)
+                        PriceRow(label = "Tax and Fees", value = taxAndFees)
+                        PriceRow(label = "Delivery", value = deliveryFee)
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                        PriceRow(label = "Total", value = 60.90f, isTotal = true)
+                        PriceRow(label = "Total", value = total, isTotal = true)
                     }
                 }
             }
             item {
                 CheckoutSection(title = "Payment Method") {
+                    // This part remains the same as it's just local UI state
                     Column {
                         PaymentOptionRow(text = "Credit/Debit Card", iconRes = R.drawable.ic_credit_card, selected = selectedPaymentOption == PaymentOption.CARD, onClick = { selectedPaymentOption = PaymentOption.CARD })
-                        HorizontalDivider()
-                        PaymentOptionRow(text = "UPI", iconRes = R.drawable.ic_upi, selected = selectedPaymentOption == PaymentOption.UPI, onClick = { selectedPaymentOption = PaymentOption.UPI })
-                        HorizontalDivider()
-                        PaymentOptionRow(text = "Net Banking", iconRes = R.drawable.ic_net_banking, selected = selectedPaymentOption == PaymentOption.NET_BANKING, onClick = { selectedPaymentOption = PaymentOption.NET_BANKING })
-                        HorizontalDivider()
-                        PaymentOptionRow(text = "Cash on Delivery", iconRes = R.drawable.ic_cash_on_delivery, selected = selectedPaymentOption == PaymentOption.COD, onClick = { selectedPaymentOption = PaymentOption.COD })
+                        HorizontalDivider(); PaymentOptionRow(text = "UPI", iconRes = R.drawable.ic_upi, selected = selectedPaymentOption == PaymentOption.UPI, onClick = { selectedPaymentOption = PaymentOption.UPI })
+                        HorizontalDivider(); PaymentOptionRow(text = "Net Banking", iconRes = R.drawable.ic_net_banking, selected = selectedPaymentOption == PaymentOption.NET_BANKING, onClick = { selectedPaymentOption = PaymentOption.NET_BANKING })
+                        HorizontalDivider(); PaymentOptionRow(text = "Cash on Delivery", iconRes = R.drawable.ic_cash_on_delivery, selected = selectedPaymentOption == PaymentOption.COD, onClick = { selectedPaymentOption = PaymentOption.COD })
                     }
                 }
             }
         }
+        if (showAddressSheet) {
+            ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
+                AddressSheetContent(
+                    addresses = addresses,
+                    selectedAddress = selectedAddress,
+                    onAddressSelected = { newAddress ->
+                        selectedAddress = newAddress
+                        showAddressSheet = false
+                    },
+                    onAddNewAddress = {
+                        showAddressSheet = false
+                        navController.navigate("add_address")
+                    }
+                )
+            }
+        }
     }
-
+}
+// THE FIX: Updated PlaceOrderBar to show the dynamic total
+@Composable
+private fun PlaceOrderBar(totalPrice: Float, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text("Total", fontSize = 14.sp, color = Color.Gray)
+                Text(
+                    text = "$${String.format("%.2f", totalPrice)}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+            }
+            Button(
+                onClick = onClick,
+                modifier = Modifier.height(52.dp).padding(start = 16.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+            ) {
+                Text("PLACE ORDER", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
 }
 
 @Composable

@@ -8,6 +8,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,7 +34,8 @@ import kotlin.collections.sumOf
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(nestedNavController: NavHostController, mainNavController: NavHostController) {
-    var cartItems by remember { mutableStateOf(DemoDataProvider.cartItems) }
+    // THE FIX: Directly observe the central cartItems list. No local copies.
+    val cartItems = DemoDataProvider.cartItems
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isVisible = true }
 
@@ -42,42 +44,73 @@ fun CartScreen(nestedNavController: NavHostController, mainNavController: NavHos
             TopAppBar(
                 title = { Text("Cart", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        nestedNavController.navigate(BottomNavTab.Home.route) {
-                            popUpTo(nestedNavController.graph.startDestinationId)
-                            launchSingleTop = true
-                        }
-                    }) {
+                    IconButton(onClick = { nestedNavController.navigate(BottomNavTab.Home.route) { popUpTo(nestedNavController.graph.startDestinationId); launchSingleTop = true } }) {
                         Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
             )
         },
+        // ... (TopBar is the same) ...
         bottomBar = { CheckoutBar(items = cartItems, onCheckout = { mainNavController.navigate("checkout") }) },
         containerColor = Color(0xFFF5F5F5)
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier.padding(innerPadding).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
-        ) {
-            itemsIndexed(items = cartItems, key = { _, item -> item.name }) { index, item ->
-                AnimatedVisibility(
-                    visible = isVisible,
-                    enter = fadeIn(tween(500, index * 100)) + slideInVertically(initialOffsetY = { 40 }, animationSpec = tween(500, index * 100))
-                ) {
-                    CartItemCard(item = item, onIncrease = { cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity + 1) } }, onDecrease = { if (item.quantity > 1) { cartItems = cartItems.toMutableList().apply { this[index] = item.copy(quantity = item.quantity - 1) } } else { cartItems = cartItems.toMutableList().apply { removeAt(index) } } }, onRemove = { cartItems = cartItems.toMutableList().apply { removeAt(index) } })
+        // THE FIX: The entire content is now conditional.
+        if (cartItems.isEmpty()) {
+            EmptyCartView(
+                onAddItemsClicked = {
+                    nestedNavController.navigate(BottomNavTab.Home.route) {
+                        popUpTo(nestedNavController.graph.startDestinationId)
+                        launchSingleTop = true
+                    }
                 }
-            }
-            item {
-                // THE FIX: The invalid 'val' keyword is removed.
-                PriceSummaryCard(items = cartItems)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.padding(innerPadding).padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(vertical = 16.dp)
+            ) {
+                items(items = cartItems, key = { it.id }) { item ->
+                    AnimatedVisibility(visible = isVisible, enter = fadeIn(tween(500)) + slideInVertically(initialOffsetY = { 40 })) {
+                        CartItemCard(
+                            item = item,
+                            onIncrease = { DemoDataProvider.increaseCartItemQuantity(item) },
+                            onDecrease = { DemoDataProvider.decreaseCartItemQuantity(item) },
+                            onRemove = { DemoDataProvider.removeCartItem(item) }
+                        )
+                    }
+                }
+                item { PriceSummaryCard(items = cartItems) }
             }
         }
     }
 }
-
+@Composable
+private fun EmptyCartView(onAddItemsClicked: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_empty_cart), // Add a suitable drawable
+            contentDescription = "Empty Cart",
+            modifier = Modifier.size(120.dp)
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text("Your Cart is Empty", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Text("Looks like you haven't added anything to your cart yet.", color = Color.Gray, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp))
+        Button(
+            onClick = onAddItemsClicked,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+            modifier = Modifier.fillMaxWidth(0.8f).height(52.dp)
+        ) {
+            Text("ADD ITEMS", fontWeight = FontWeight.Bold)
+        }
+    }
+}
 @Composable
 fun CartItemCard(
     item: CartItem,
@@ -124,11 +157,11 @@ fun CartItemCard(
     }
 }
 
+// In ui/CartScreen.kt
+
 @Composable
 fun PriceSummaryCard(items: List<CartItem>) {
     val subtotal = items.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
-    val taxAndFees = 5.30f // Example values
-    val delivery = 1.00f
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -155,17 +188,27 @@ fun PriceSummaryCard(items: List<CartItem>) {
                 }
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+
+            // This is the only price row now
             PriceRow(label = "Subtotal", value = subtotal)
-            PriceRow(label = "Tax and Fees", value = taxAndFees)
-            PriceRow(label = "Delivery", value = delivery)
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // THE FIX: The formal sentence is added here.
+            Text(
+                text = "Delivery fees and taxes will be calculated at checkout.",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+            )
         }
     }
 }
 
 @Composable
 fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
-    val subtotal = items.sumOf { (it.price * it.quantity).toDouble() }.toFloat()
-    val total = subtotal + 5.30f + 1.00f // Replace with actual logic
+    // No need to calculate total here anymore, simplifying the component.
     val itemCount = items.sumOf { it.quantity }
 
     Card(
@@ -175,12 +218,20 @@ fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // THE FIX: The total price is removed to avoid confusion.
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Total", fontSize = 16.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("($itemCount items)", fontSize = 16.sp, color = Color.Gray)
-                Spacer(modifier = Modifier.weight(1f))
-                Text("$${String.format("%.2f", total)}", fontSize = 22.sp, color = Color.Black, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Total Items",
+                    fontSize = 16.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = "$itemCount",
+                    fontSize = 22.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
+                )
             }
             Spacer(modifier = Modifier.height(12.dp))
             Button(
@@ -189,7 +240,7 @@ fun CheckoutBar(items: List<CartItem>, onCheckout: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
                 modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
-                Text("Checkout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Text("Proceed to Checkout", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
     }

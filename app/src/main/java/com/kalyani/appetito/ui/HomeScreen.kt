@@ -78,12 +78,8 @@ fun HomeScreenContent(
 ) {
     val sheetState = rememberModalBottomSheetState()
     var showAddressSheet by remember { mutableStateOf(false) }
-
-    // THE FIX: Use the Address objects from the central provider.
     val addresses = DemoDataProvider.savedAddresses
-    // THE FIX: Use the correct property delegate reference syntax.
     var selectedAddress by DemoDataProvider::selectedAddress
-
     val featuredRestaurants = DemoDataProvider.featuredRestaurants
     val popularItems = DemoDataProvider.popularItems
 
@@ -104,7 +100,6 @@ fun HomeScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Deliver to", color = Color.Gray, fontSize = 12.sp)
-                        // THE FIX: Correctly access the 'fullAddress' property.
                         Text(selectedAddress.fullAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                     Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = Color(0xFFFE724C), modifier = Modifier.size(20.dp).padding(start = 4.dp))
@@ -140,7 +135,15 @@ fun HomeScreenContent(
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     featuredRestaurants.forEach { restaurant ->
-                        RestaurantCard(name = restaurant.name, description = restaurant.description, deliveryInfo = restaurant.deliveryInfo, imageRes = restaurant.imageRes, rating = restaurant.rating, onClick = { mainNavController.navigate("food_details/${restaurant.id}") })
+                        // THE FIX: The onClick is defined HERE, where 'restaurant' exists.
+                        RestaurantCard(
+                            name = restaurant.name,
+                            description = restaurant.description,
+                            deliveryInfo = restaurant.deliveryInfo,
+                            imageRes = restaurant.imageRes,
+                            rating = restaurant.rating,
+                            onClick = { mainNavController.navigate("food_details/${restaurant.id}") }
+                        )
                     }
                 }
             }
@@ -150,7 +153,14 @@ fun HomeScreenContent(
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     popularItems.forEach { item ->
-                        PopularItemCard(name = item.name, restaurant = item.restaurantName, price = "$${String.format("%.2f", item.price)}", imageRes = item.imageRes, onClick = { mainNavController.navigate("food_details/${item.id}") })
+                        // THE FIX: The onClick is defined HERE, where 'item' exists.
+                        PopularItemCard(
+                            name = item.name,
+                            restaurant = item.restaurantName,
+                            price = "$${String.format("%.2f", item.price)}",
+                            imageRes = item.imageRes,
+                            onClick = { mainNavController.navigate("food_details/${item.id}") }
+                        )
                     }
                 }
             }
@@ -159,25 +169,18 @@ fun HomeScreenContent(
 
         if (showAddressSheet) {
             ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
-                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 32.dp)) {
-                    Text("Select Address", fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(16.dp))
-                    addresses.forEach { address ->
-                        // THE FIX: Correctly access the 'id' property.
-                        AddressListItem(address = address, isSelected = address.id == selectedAddress.id, onClick = {
-                            DemoDataProvider.selectedAddress = address
-                            showAddressSheet = false
-                        })
+                AddressSheetContent(
+                    addresses = addresses,
+                    selectedAddress = selectedAddress,
+                    onAddressSelected = { newAddress ->
+                        selectedAddress = newAddress
+                        showAddressSheet = false
+                    },
+                    onAddNewAddress = {
+                        showAddressSheet = false
+                        mainNavController.navigate("add_address")
                     }
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().clickable { showAddressSheet = false; mainNavController.navigate("add_address") }.padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(painter = painterResource(id = R.drawable.ic_plus), contentDescription = "Add Address", tint = Color(0xFFFE724C))
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text("Add new address", color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
-                    }
-                }
+                )
             }
         }
     }
@@ -259,6 +262,7 @@ fun CategoryChip(name: String, imageRes: Int, selected: Boolean = false) {
     }
 }
 
+// THE FIX: The Card is now just a UI component. The onClick is passed in.
 @Composable
 fun RestaurantCard(name: String, description: String, deliveryInfo: String, imageRes: Int, rating: Float, onClick: () -> Unit) {
     Card(onClick = onClick, shape = RoundedCornerShape(24.dp), modifier = Modifier.width(280.dp).height(200.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
@@ -280,6 +284,7 @@ fun RestaurantCard(name: String, description: String, deliveryInfo: String, imag
     }
 }
 
+// THE FIX: The onClick is passed in and applied to the modifier. No invalid assignment.
 @Composable
 fun PopularItemCard(name: String, restaurant: String, price: String, imageRes: Int, onClick: () -> Unit) {
     Row(

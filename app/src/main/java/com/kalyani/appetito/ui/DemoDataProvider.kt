@@ -6,136 +6,60 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.kalyani.appetito.R
 
-// --- Data Models ---
+// --- Data Models (ensuring all have a unique 'id') ---
 data class Address(
     val id: Int,
+    val fullName: String,
     val street: String,
     val cityState: String,
-    val fullAddress: String // A simple string for display in the list
+    val fullAddress: String
 )
+data class DemoUser(val name: String, val email: String, val phone: String, val balance: Float, val profileImageRes: Int)
+data class CartItem(val id: String, val name: String, val description: String, val price: Float, var quantity: Int, val imageRes: Int)
+data class Restaurant(val id: String, val name: String, val description: String, val deliveryInfo: String, val rating: Float, val imageRes: Int)
+data class PopularItem(val id: String, val name: String, val restaurantName: String, val price: Float, val imageRes: Int)
+data class CategoryItemData(val id: String, val name: String, val description: String, val price: Float, val rating: Float, val reviews: Int, val imageRes: Int)
+data class UpcomingOrder(val id: String, val restaurant: String, val items: Int, val status: String, val eta: Int, val imageRes: Int)
+data class HistoryOrder(val id: String, val restaurant: String, val items: Int, val date: String, val price: Float, val status: String, val imageRes: Int)
+data class FoodItemDetails(val id: String, val name: String, val description: String, val price: Float, val imageRes: Int, val rating: Float, val reviewCount: Int)
 
-data class DemoUser(
-    val name: String,
-    val email: String,
-    val phone: String,
-    val balance: Float,
-    val profileImageRes: Int
-)
 
-data class CartItem(
-    val name: String,
-    val description: String,
-    val price: Float,
-    var quantity: Int,
-    val imageRes: Int
-)
-
-data class UpcomingOrder(
-    val id: String,
-    val restaurant: String,
-    val items: Int,
-    val status: String,
-    val eta: Int,
-    val imageRes: Int
-)
-
-data class HistoryOrder(
-    val id: String,
-    val restaurant: String,
-    val items: Int,
-    val date: String,
-    val price: Float,
-    val status: String,
-    val imageRes: Int
-)
-
-// NEW: Data model for a featured restaurant
-data class Restaurant(
-    val id: String,
-    val name: String,
-    val description: String,
-    val deliveryInfo: String,
-    val rating: Float,
-    val imageRes: Int
-)
-
-// NEW: Data model for a popular item
-data class PopularItem(
-    val id: String,
-    val name: String,
-    val restaurantName: String,
-    val price: Float,
-    val imageRes: Int
-)
-
-// --- Data Provider Object ---
-
+// --- SINGLE DATA PROVIDER OBJECT ---
 object DemoDataProvider {
 
     val user = DemoUser(
         name = "Kalyani Patil",
-        email = "patil.kalyanii0209 @gmail.com",
+        email = "patil.kalyanii0209@gmail.com",
         phone = "+91 9876543210",
         balance = 902.29f,
         profileImageRes = R.drawable.image_13
     )
 
     val savedAddresses = mutableStateListOf(
-        Address(id = 1, street = "DYP, Talsande", cityState = "Kolhapur, MH", fullAddress = "DYP, Talsande"),
-        Address(id = 2, street = "Gangapur Road", cityState = "Nashik, MH", fullAddress = "Gangapur"),
-        Address(id = 3, street = "Gargoti Main Rd", cityState = "Gargoti, MH", fullAddress = "Gargoti")
-    )
-
-    var cartItems by mutableStateOf(
-        listOf(
-            CartItem("Red n hot pizza", "Spicy chicken, beef", 15.30f, 2, R.drawable.chicken_hawaiian),
-            CartItem("Greek salad", "with baked salmon", 29.00f, 2, R.drawable.greek_salad)
-        )
+        Address(id = 1, fullName = "Kalyani Patil", street = "DYP, Talsande", cityState = "Kolhapur, MH", fullAddress = "DYP, Talsande"),
+        Address(id = 2, fullName = "John Doe", street = "Gangapur Road", cityState = "Nashik, MH", fullAddress = "Gangapur"),
+        Address(id = 3, fullName = "Jane Smith", street = "Gargoti Main Rd", cityState = "Gargoti, MH", fullAddress = "Gargoti")
     )
     var selectedAddress by mutableStateOf(savedAddresses.first())
-    // NEW: List of featured restaurants
+
+    var cartItems = mutableStateListOf<CartItem>()
+
     val featuredRestaurants = listOf(
-        Restaurant(
-            id = "mcdonalds",
-            name = "McDonald's",
-            description = "Burger • Chicken • Fast Food",
-            deliveryInfo = "Free delivery • 10-15 mins",
-            rating = 4.9f,
-            imageRes = R.drawable.mcdonalds_img
-        ),
-        Restaurant(
-            id = "starbucks",
-            name = "Starbucks",
-            description = "Coffee • Bakery • Drinks",
-            deliveryInfo = "Free delivery • 5-10 mins",
-            rating = 4.7f,
-            imageRes = R.drawable.starbucks_img
-        )
+        Restaurant("mcdonalds", "McDonald's", "Burger • Chicken • Fast Food", "Free delivery • 10-15 mins", 4.9f, R.drawable.mcdonalds_img),
+        Restaurant("starbucks", "Starbucks", "Coffee • Bakery • Drinks", "Free delivery • 5-10 mins", 4.7f, R.drawable.starbucks_img)
     )
 
-    // NEW: List of popular food items
     val popularItems = listOf(
-        PopularItem(
-            id = "cheese_burger",
-            name = "Cheese Burger",
-            restaurantName = "Burger King",
-            price = 5.50f,
-            imageRes = R.drawable.img_burger
-        ),
-        PopularItem(
-            id = "toffee_cake",
-            name = "Toffee's Cake",
-            restaurantName = "Top Cake",
-            price = 8.25f,
-            imageRes = R.drawable.cake_img
-        ),
-        PopularItem(
-            id = "dosa",
-            name = "Dosa",
-            restaurantName = "Madras Cafe",
-            price = 6.75f,
-            imageRes = R.drawable.dosa // You'll need to add this drawable
-        )
+        PopularItem("cheese_burger", "Cheese Burger", "Burger King", 5.50f, R.drawable.img_burger),
+        PopularItem("toffee_cake", "Toffee's Cake", "Top Cake", 8.25f, R.drawable.cake_img),
+        PopularItem("dosa", "Dosa", "Madras Cafe", 6.75f, R.drawable.dosa)
+    )
+
+    val categoryItems = listOf(
+        CategoryItemData("chicken_hawaiian", "Chicken Hawaiian", "Chicken, Cheese and pineapple", 10.35f, 4.5f, 25, R.drawable.chicken_hawaiian),
+        CategoryItemData("margherita_pizza", "Margherita Pizza", "Fresh tomatoes, mozzarella, basil", 8.99f, 4.7f, 42, R.drawable.pizza_2),
+        CategoryItemData("pepperoni_special", "Pepperoni Special", "Pepperoni, cheese, Italian herbs", 12.50f, 4.6f, 38, R.drawable.pizza_3),
+        CategoryItemData("veggie_supreme", "Veggie Supreme", "Bell peppers, olives, mushrooms", 11.25f, 4.4f, 29, R.drawable.pizza_4)
     )
 
     val upcomingOrders = listOf(
@@ -146,4 +70,63 @@ object DemoDataProvider {
         HistoryOrder("264099", "McDonald’s", 2, "2025-07-25", 22.50f, "Delivered", R.drawable.chicken_hawaiian),
         HistoryOrder("264098", "Pizza Hut", 1, "2025-07-20", 15.30f, "Delivered", R.drawable.chicken_hawaiian)
     )
+
+    // --- UTILITY FUNCTIONS ---
+
+    fun getItemById(id: String?): FoodItemDetails? {
+        val allItems = popularItems.map { FoodItemDetails(it.id, it.name, "From ${it.restaurantName}", it.price, it.imageRes, 4.5f, 50) } +
+                categoryItems.map { FoodItemDetails(it.id, it.name, it.description, it.price, it.imageRes, it.rating, it.reviews) } +
+                featuredRestaurants.map { FoodItemDetails(it.id, it.name, it.description, 15.00f, it.imageRes, it.rating, 100) }
+
+        return allItems.find { it.id == id }
+    }
+
+    fun increaseCartItemQuantity(item: CartItem) {
+        val index = cartItems.indexOf(item)
+        if (index != -1) {
+            cartItems[index] = item.copy(quantity = item.quantity + 1)
+        }
+    }
+
+    fun decreaseCartItemQuantity(item: CartItem) {
+        val index = cartItems.indexOf(item)
+        if (index != -1) {
+            if (item.quantity > 1) {
+                cartItems[index] = item.copy(quantity = item.quantity - 1)
+            } else {
+                cartItems.removeAt(index)
+            }
+        }
+    }
+
+    fun removeCartItem(item: CartItem) {
+        cartItems.remove(item)
+    }
+    // In ui/DemoDataProvider.kt, inside object DemoDataProvider
+
+    // --- ADD THIS NEW FUNCTION ---
+    fun addToCart(item: FoodItemDetails, quantity: Int, selectedAddOns: Set<AddOn>) {
+        // Check if an item with the same ID is already in the cart
+        val existingItem = cartItems.find { it.id == item.id }
+
+        if (existingItem != null) {
+            // If it exists, just update its quantity
+            val index = cartItems.indexOf(existingItem)
+            cartItems[index] = existingItem.copy(quantity = existingItem.quantity + quantity)
+        } else {
+            // If not, add a new CartItem
+            // We can build a more detailed description if needed
+            val description = selectedAddOns.joinToString(", ") { it.name }
+            cartItems.add(
+                CartItem(
+                    id = item.id,
+                    name = item.name,
+                    description = if (description.isBlank()) "Standard" else description,
+                    price = item.price,
+                    quantity = quantity,
+                    imageRes = item.imageRes
+                )
+            )
+        }
+    }
 }

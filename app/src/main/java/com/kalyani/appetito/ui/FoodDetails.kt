@@ -4,6 +4,7 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,16 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 import kotlinx.coroutines.delay
 
-private data class FoodItemDetails(val id: String, val name: String, val description: String, val price: Float, val imageRes: Int, val rating: Float, val reviewCount: Int)
-private fun getFoodDetailsById(itemId: String?): FoodItemDetails {
-    return when (itemId) {
-        "cheese_burger" -> FoodItemDetails("cheese_burger", "Cheese Burger", "A classic cheese burger with a juicy beef patty, fresh lettuce, tomatoes, and our secret sauce.", 9.50f, R.drawable.img_burger, 4.8f, 102)
-        "toffee_cake" -> FoodItemDetails("toffee_cake", "Toffee's Cake", "A rich and moist toffee cake, topped with a delicious caramel glaze and nuts.", 8.25f, R.drawable.cake_img, 4.9f, 78)
-        "mcdonalds" -> FoodItemDetails("mcdonalds", "Big Mac Combo", "The world-famous Big Mac combo with a large fries and a drink of your choice.", 12.99f, R.drawable.mcdonalds_img, 4.5f, 500)
-        "starbucks" -> FoodItemDetails("starbucks", "Caramel Macchiato", "Rich, full-bodied espresso with vanilla-flavored syrup, steamed milk, and a caramel drizzle.", 5.75f, R.drawable.starbucks_img, 4.7f, 830)
-        else -> FoodItemDetails("default", "Ground Beef Tacos", "Brown the beef better. Lean ground beef – I like to use 85% lean angus. Garlic – use fresh chopped. Spices – chili powder, cumin, onion powder.", 9.50f, R.drawable.chicken_hawaiian, 4.5f, 35)
-    }
-}
+// THE FIX: The missing AddOn data class is restored here.
 data class AddOn(val name: String, val price: Float)
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,71 +36,81 @@ fun FoodDetailsScreen(
     itemId: String?,
     navController: NavHostController
 ) {
-    val foodItem = remember(itemId) { getFoodDetailsById(itemId) }
+    val foodItem = remember(itemId) { DemoDataProvider.getItemById(itemId) }
+
     var quantity by remember { mutableStateOf(1) }
     val addOns = remember { listOf(AddOn("Pepper Julienned", 2.30f), AddOn("Baby Spinach", 4.70f), AddOn("Masroom", 2.50f)) }
     var selectedAddOns by remember { mutableStateOf(setOf<AddOn>()) }
     var isAddedToCart by remember { mutableStateOf(false) }
     var isContentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isContentVisible = true }
-
-    LaunchedEffect(quantity, selectedAddOns) {
-        if (isAddedToCart) {
-            isAddedToCart = false
-        }
-    }
+    LaunchedEffect(quantity, selectedAddOns) { if (isAddedToCart) { isAddedToCart = false } }
 
     Scaffold(
-        topBar = { /* ... */ },
-        bottomBar = {
-            AddToCartBar(
-                foodItem = foodItem,
-                quantity = quantity,
-                selectedAddOns = selectedAddOns,
-                isAddedToCart = isAddedToCart,
-                onAddToCart = { isAddedToCart = true }
+        // THE FIX: The TopAppBar and BottomAppBar are correctly placed within the Scaffold.
+        topBar = {
+            TopAppBar(
+                title = {},
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(painterResource(id = R.drawable.ic_back), "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Handle favorite */ }) {
+                        Icon(painterResource(id = R.drawable.ic_favorite), "Favorite", tint = Color(0xFFFE724C))
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
+        },
+        bottomBar = {
+            if (foodItem != null) {
+                AddToCartBar(
+                    foodItem = foodItem,
+                    quantity = quantity,
+                    selectedAddOns = selectedAddOns,
+                    isAddedToCart = isAddedToCart,
+                    onAddToCart = {
+                        isAddedToCart = true
+                        // TODO: Add item to central cart list
+                    }
+                )
+            }
         }
     ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Image(
-                painter = painterResource(id = foodItem.imageRes),
-                contentDescription = foodItem.name,
-                modifier = Modifier.fillMaxWidth().height(250.dp),
-                contentScale = ContentScale.Crop
-            )
+        Column(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+            if (foodItem == null) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Sorry, item not found!")
+                }
+            } else {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Image(
+                        painter = painterResource(id = foodItem.imageRes),
+                        contentDescription = foodItem.name,
+                        modifier = Modifier.fillMaxWidth().height(250.dp),
+                        contentScale = ContentScale.Crop
+                    )
 
-            AnimatedVisibility(
-                visible = isContentVisible,
-                enter = fadeIn(tween(500, 200)) + slideInVertically(tween(500, 200), initialOffsetY = { it / 2 })
-            ) {
-                Column {
-                    FoodItemHeader(foodItem = foodItem, quantity = quantity, onQuantityChange = { newQuantity -> quantity = newQuantity })
-
-                    Text(text = foodItem.description, color = Color.Gray, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-
-                    Text(text = "Choice of Add On", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color.Black, modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp))
-
-                    Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                        addOns.forEach { addOn ->
-                            AddOnRow(
-                                addOn = addOn,
-                                isSelected = addOn in selectedAddOns,
-                                onSelect = {
-                                    selectedAddOns = if (it) {
-                                        selectedAddOns + addOn
-                                    } else {
-                                        selectedAddOns - addOn
-                                    }
+                    AnimatedVisibility(
+                        visible = isContentVisible,
+                        enter = fadeIn(tween(500, 200)) + slideInVertically(tween(500, 200), initialOffsetY = { it / 2 })
+                    ) {
+                        Column {
+                            FoodItemHeader(foodItem = foodItem, quantity = quantity, onQuantityChange = { newQuantity -> quantity = newQuantity })
+                            Text(text = foodItem.description, color = Color.Gray, fontSize = 15.sp, lineHeight = 22.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                            Text(text = "Choice of Add On", fontWeight = FontWeight.SemiBold, fontSize = 18.sp, color = Color.Black, modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp))
+                            Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+                                addOns.forEach { addOn ->
+                                    AddOnRow(addOn = addOn, isSelected = addOn in selectedAddOns, onSelect = { isSelected ->
+                                        selectedAddOns = if (isSelected) selectedAddOns + addOn else selectedAddOns - addOn
+                                    })
                                 }
-                            )
+                            }
+                            Spacer(Modifier.height(120.dp)) // Spacer to push content above the bottom bar
                         }
                     }
-                    Spacer(Modifier.height(24.dp)) // Add space at the bottom before the checkout bar
                 }
             }
         }
@@ -145,7 +147,7 @@ private fun FoodItemHeader(foodItem: FoodItemDetails, quantity: Int, onQuantityC
 fun AddOnRow(addOn: AddOn, isSelected: Boolean, onSelect: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp).clickable { onSelect(!isSelected) }
     ) {
         Image(painter = painterResource(id = R.drawable.food_placeholder), contentDescription = null, modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp)))
         Spacer(modifier = Modifier.width(16.dp))
@@ -156,13 +158,12 @@ fun AddOnRow(addOn: AddOn, isSelected: Boolean, onSelect: (Boolean) -> Unit) {
         Checkbox(
             checked = isSelected,
             onCheckedChange = onSelect,
-            colors = CheckboxDefaults.colors(
-                checkedColor = Color(0xFFFE724C),
-                uncheckedColor = Color.LightGray
-            )
+            colors = CheckboxDefaults.colors(checkedColor = Color(0xFFFE724C), uncheckedColor = Color.LightGray)
         )
     }
 }
+
+// In ui/FoodDetailsScreen.kt
 
 @Composable
 private fun AddToCartBar(
@@ -178,7 +179,7 @@ private fun AddToCartBar(
     LaunchedEffect(isAddedToCart) {
         if (isAddedToCart) {
             delay(2000)
-            }
+        }
     }
 
     Card(
@@ -187,18 +188,10 @@ private fun AddToCartBar(
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text("Total Price", fontSize = 14.sp, color = Color.Gray)
-                Text(
-                    text = "$${String.format("%.2f", totalPrice)}",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                Text(text = "$${String.format("%.2f", totalPrice)}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
             }
             AnimatedContent(
                 targetState = isAddedToCart,
@@ -206,13 +199,14 @@ private fun AddToCartBar(
                 label = "AddToCartButtonAnimation"
             ) { added ->
                 Button(
-                    onClick = onAddToCart,
+                    // THE FIX: The onClick now calls the central provider function
+                    onClick = {
+                        DemoDataProvider.addToCart(foodItem, quantity, selectedAddOns)
+                        onAddToCart() // This just triggers the UI change to "Added!"
+                    },
                     enabled = !added,
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (added) Color.Gray else Color(0xFFFE724C),
-                        disabledContainerColor = Color.LightGray
-                    ),
+                    colors = ButtonDefaults.buttonColors(containerColor = if (added) Color.Gray else Color(0xFFFE724C), disabledContainerColor = Color.LightGray),
                     modifier = Modifier.height(52.dp).width(180.dp)
                 ) {
                     if (added) {

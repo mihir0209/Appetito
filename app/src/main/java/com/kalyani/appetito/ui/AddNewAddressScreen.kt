@@ -1,8 +1,6 @@
 package ui
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -25,9 +23,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
-// Note: The UserAddress data class and the local savedAddresses list have been removed from this file.
-// We will now use the single source of truth from DemoDataProvider.
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddNewAddressScreen(
@@ -38,21 +33,18 @@ fun AddNewAddressScreen(
     var state by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var street by remember { mutableStateOf("") }
-
     var editingAddressId by remember { mutableStateOf<Int?>(null) }
 
-    // This now correctly reads the list from the central provider.
     val savedAddresses = DemoDataProvider.savedAddresses
 
-    // THE FIX: This function now correctly accepts the 'Address' data class.
     fun populateFieldsForEdit(address: Address) {
         editingAddressId = address.id
-        // We will assume the fullAddress contains the name for this dummy data.
-        // In a real app, 'Address' would have a 'fullName' field.
-        fullName = address.fullAddress
-        mobileNumber = " " // Dummy data for now
-        state = address.cityState
-        city = address.cityState
+        // THE FIX: Now correctly populates from the right fields.
+        fullName = address.fullName
+        mobileNumber = "+91 9876543210" // Placeholder mobile
+        val cityStateParts = address.cityState.split(",").map { it.trim() }
+        city = cityStateParts.getOrElse(0) { "" }
+        state = cityStateParts.getOrElse(1) { "" }
         street = address.street
     }
 
@@ -95,6 +87,7 @@ fun AddNewAddressScreen(
                 }
             }
 
+            // THE FIX: This button's ONLY job is to clear the fields.
             OutlinedButton(
                 onClick = { clearFieldsForNew() },
                 modifier = Modifier.fillMaxWidth(),
@@ -117,23 +110,22 @@ fun AddNewAddressScreen(
                     AddressTextField(label = "City", value = city, onValueChange = { city = it })
                     AddressTextField(label = "Street (Include house number)", value = street, onValueChange = { street = it })
 
+                    // THE FIX: The SAVE logic is now in the correct button.
                     Button(
                         onClick = {
                             if (editingAddressId == null) {
                                 val newId = (DemoDataProvider.savedAddresses.maxOfOrNull { it.id } ?: 0) + 1
-                                // THE FIX: Correctly creating the 'Address' object.
-                                // In a real app, 'fullName' would be a field in the Address class.
-                                // For now, we'll construct the fullAddress from other fields.
-                                DemoDataProvider.savedAddresses.add(
-                                    Address(
-                                        id = newId,
-                                        street = street,
-                                        cityState = "$city, $state",
-                                        fullAddress = fullName // Using the fullName from the text field
-                                    )
+                                val newAddress = Address(
+                                    id = newId,
+                                    fullName = fullName,
+                                    street = street,
+                                    cityState = "$city, $state",
+                                    fullAddress = "$street, $city"
                                 )
+                                DemoDataProvider.savedAddresses.add(newAddress)
+                                DemoDataProvider.selectedAddress = newAddress
                             } else {
-                                // TODO: Implement update logic
+                                // TODO: Implement update logic here by finding the item by ID and replacing it.
                             }
                             navController.popBackStack()
                         },
@@ -150,7 +142,6 @@ fun AddNewAddressScreen(
 }
 
 @Composable
-// THE FIX: This function now correctly accepts the 'Address' data class.
 private fun AddressRow(address: Address, onEdit: () -> Unit) {
     Row(
         modifier = Modifier
@@ -159,8 +150,9 @@ private fun AddressRow(address: Address, onEdit: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(address.fullAddress, fontWeight = FontWeight.Bold) // Display the main address line
-            Text(address.cityState, color = Color.Gray) // Display the city/state
+            // THE FIX: Now correctly uses the 'fullName' and 'fullAddress' fields.
+            Text(address.fullName, fontWeight = FontWeight.Bold)
+            Text(address.fullAddress, color = Color.Gray)
         }
         TextButton(onClick = onEdit) {
             Text("Edit", color = Color(0xFFFE724C))

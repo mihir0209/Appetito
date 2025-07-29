@@ -30,14 +30,9 @@ import com.kalyani.appetito.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// THE FIX: The function now correctly accepts a NavHostController.
-fun CategoryScreen(navController: NavHostController) {
-    val categories = listOf(
-        CategoryItemData("Chicken Hawaiian", "Chicken, Cheese and pineapple", 10.35f, 4.5f, 25, R.drawable.chicken_hawaiian),
-        CategoryItemData("Margherita Pizza", "Fresh tomatoes, mozzarella, basil", 8.99f, 4.7f, 42, R.drawable.pizza_2),
-        CategoryItemData("Pepperoni Special", "Pepperoni, cheese, Italian herbs", 12.50f, 4.6f, 38, R.drawable.pizza_3),
-        CategoryItemData("Veggie Supreme", "Bell peppers, olives, mushrooms", 11.25f, 4.4f, 29, R.drawable.pizza_4)
-    )
+fun CategoryScreen(nestedNavController: NavHostController, mainNavController: NavHostController) {
+
+    val categories = DemoDataProvider.categoryItems
 
     var isContentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { isContentVisible = true }
@@ -58,11 +53,10 @@ fun CategoryScreen(navController: NavHostController) {
                 TopAppBar(
                     title = {},
                     navigationIcon = {
-                        // THE FIX: The back button is now functional.
                         IconButton(onClick = {
-                            // This navigates back to the Home screen, the start of the tabs.
-                            navController.navigate(BottomNavTab.Home.route) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            // Uses the nestedNavController to go back to the Home tab.
+                            nestedNavController.navigate(BottomNavTab.Home.route) {
+                                popUpTo(nestedNavController.graph.startDestinationId) { inclusive = true }
                                 launchSingleTop = true
                             }
                         }) {
@@ -102,21 +96,18 @@ fun CategoryScreen(navController: NavHostController) {
                         Spacer(modifier = Modifier.height(24.dp))
                     }
                 }
-                itemsIndexed(categories) { index, item ->
+                itemsIndexed(categories, key = { _, item -> item.id }) { index, item ->
                     AnimatedVisibility(
                         visible = isContentVisible,
                         enter = fadeIn(animationSpec = tween(500, delayMillis = index * 100)) +
-                                slideInVertically(
-                                    initialOffsetY = { 60 },
-                                    animationSpec = tween(500, delayMillis = index * 100)
-                                )
+                                slideInVertically(initialOffsetY = { 60 }, animationSpec = tween(500, delayMillis = index * 100))
                     ) {
-                        CategoryCard(item, onClick = {
-                            // Example: Navigate to food details when a card is clicked
-                            // Note: We would need the *main* NavController for this to work.
-                            // For now, the action is commented out.
-                            // mainNavController.navigate("food_details/${item.name}")
-                        })
+                        CategoryCard(
+                            item = item,
+                            onClick = {
+                               mainNavController.navigate("food_details/${item.id}")
+                            }
+                        )
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -125,16 +116,6 @@ fun CategoryScreen(navController: NavHostController) {
         }
     }
 }
-
-data class CategoryItemData(
-    val name: String,
-    val description: String,
-    val price: Float,
-    val rating: Float,
-    val reviews: Int,
-    val imageRes: Int
-)
-
 @Composable
 fun CategoryCard(item: CategoryItemData, onClick: () -> Unit) {
     var isFavorite by remember { mutableStateOf(false) }
@@ -185,6 +166,5 @@ fun CategoryCard(item: CategoryItemData, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun CategoryScreenPreview() {
-    // THE FIX: The preview now passes a dummy NavController.
-    CategoryScreen(navController = rememberNavController())
+    CategoryScreen(nestedNavController = rememberNavController(), mainNavController = rememberNavController())
 }

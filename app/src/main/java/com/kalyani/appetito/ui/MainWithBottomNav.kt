@@ -28,7 +28,7 @@ fun MainWithBottomNav(
                 HomeScreen(nestedNavController = nestedNavController, mainNavController = mainNavController)
             }
             composable(BottomNavTab.Category.route) {
-                CategoryScreen(navController = nestedNavController)
+                CategoryScreen(nestedNavController = nestedNavController, mainNavController = mainNavController)
             }
             composable(BottomNavTab.Cart.route) {
                 CartScreen(nestedNavController = nestedNavController, mainNavController = mainNavController)
