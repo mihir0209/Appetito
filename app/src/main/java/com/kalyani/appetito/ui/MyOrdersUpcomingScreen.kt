@@ -17,8 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,11 +33,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun MyOrdersUpcomingScreen(navController: NavHostController) {
-    // THE FIX: Reads the dynamic list of placed orders
     val upcomingOrders = DemoDataProvider.placedUpcomingOrders
     val historyOrders = DemoDataProvider.historyOrders
 
-    // --- State for the Swipeable Tabs (Pager) ---
     val pagerState = rememberPagerState(pageCount = { 2 })
     val coroutineScope = rememberCoroutineScope()
 
@@ -46,35 +44,50 @@ fun MyOrdersUpcomingScreen(navController: NavHostController) {
             TopAppBar(
                 title = { Text("My Orders", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) { // Use simple back for now
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                // CHANGE: Use theme colors for TopAppBar
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        // CHANGE: Use theme background color
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             TabRow(
                 selectedTabIndex = pagerState.currentPage,
                 indicator = { tabPositions ->
-                    TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]), color = Color(0xFFFE724C))
-                }
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[pagerState.currentPage]),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                // CHANGE: Use theme surface color for the TabRow container
+                containerColor = MaterialTheme.colorScheme.surface
             ) {
+                // CHANGE: Use theme colors for tab text
                 Tab(
                     selected = pagerState.currentPage == 0,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(0) } },
-                    text = { Text("Upcoming", color = if (pagerState.currentPage == 0) Color(0xFFFE724C) else Color.Gray) }
+                    text = { Text("Upcoming") },
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Tab(
                     selected = pagerState.currentPage == 1,
                     onClick = { coroutineScope.launch { pagerState.animateScrollToPage(1) } },
-                    text = { Text("History", color = if (pagerState.currentPage == 1) Color(0xFFFE724C) else Color.Gray) }
+                    text = { Text("History") },
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // THE FIX: HorizontalPager makes the content swipeable
             HorizontalPager(state = pagerState) { page ->
                 when (page) {
                     0 -> UpcomingOrdersList(orders = upcomingOrders)
@@ -114,51 +127,62 @@ fun UpcomingOrderCard(order: UpcomingOrder) {
     Box(contentAlignment = Alignment.Center) {
         Card(
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            // CHANGE: Use theme surface color
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                // THE FIX: This now looks like the Cart items
                 order.items.forEach { item ->
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 8.dp)) {
                         Image(
                             painter = painterResource(id = item.imageRes),
                             contentDescription = item.name,
-                            modifier = Modifier.size(50.dp).clip(RoundedCornerShape(8.dp))
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(8.dp))
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(item.name, fontWeight = FontWeight.Bold)
-                            Text("${item.quantity}x", color = Color.Gray, fontSize = 12.sp)
+                            Text(item.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                            Text("${item.quantity}x", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                         }
                     }
                 }
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("ETA: ${order.eta} min", fontSize = 15.sp, color = Color.Black, fontWeight = FontWeight.SemiBold)
-                        Text(order.status, fontSize = 14.sp, color = Color.Gray)
+                        Text("ETA: ${order.eta} min", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
+                        Text(order.status, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text("#${order.id}", fontSize = 14.sp, color = Color.Gray)
+                    Text("#${order.id}", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { /* TODO: Track Order */ }, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)), modifier = Modifier.weight(1f).height(48.dp)) {
-                        Text("Track Order", color = Color.White, fontSize = 15.sp)
+                    Button(
+                        onClick = { /* TODO: Track Order */ },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                    ) {
+                        Text("Track Order", color = MaterialTheme.colorScheme.onPrimary, fontSize = 15.sp)
                     }
                     OutlinedButton(
                         onClick = { isCancelled = true },
                         enabled = !isCancelled,
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f).height(48.dp)
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(MaterialTheme.colorScheme.outline))
                     ) {
-                        Text("Cancel", color = Color.Gray, fontSize = 15.sp)
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                     }
                 }
             }
         }
 
-        // THE FIX: The "Cancelled" overlay
         AnimatedVisibility(
             visible = isCancelled,
             enter = fadeIn(animationSpec = tween(300))
@@ -167,12 +191,12 @@ fun UpcomingOrderCard(order: UpcomingOrder) {
                 modifier = Modifier
                     .matchParentSize()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .background(Color.Black.copy(alpha = 0.6f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     "CANCELLED",
-                    color = Color.White.copy(alpha = 0.7f),
+                    color = Color.White.copy(alpha = 0.8f),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                 )
@@ -184,7 +208,7 @@ fun UpcomingOrderCard(order: UpcomingOrder) {
 fun HistoryOrderCard(order: HistoryOrder) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -192,34 +216,40 @@ fun HistoryOrderCard(order: HistoryOrder) {
                 Image(
                     painter = painterResource(id = order.imageRes.takeIf { it != 0 } ?: R.drawable.profile_photo),
                     contentDescription = null,
-                    modifier = Modifier.size(52.dp).clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(12.dp))
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(order.restaurant, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                    Text(order.date, fontSize = 12.sp, color = Color.Gray)
+                    Text(order.restaurant, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(order.date, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Text("$${String.format("%.2f", order.price)}", fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.SemiBold)
+                Text("$${String.format("%.2f", order.price)}", fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.surfaceVariant)
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("${order.items} Items", fontSize = 14.sp, color = Color.Gray)
+                Text("${order.items} Items", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = { /* TODO: Re-Order */ },
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Re-Order", color = Color.White, fontSize = 15.sp)
+                    Text("Re-Order", color = MaterialTheme.colorScheme.onPrimary, fontSize = 15.sp)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = { /* TODO: Rate */ },
                     shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.height(48.dp)
+                    modifier = Modifier.height(48.dp),
+                    border = ButtonDefaults.outlinedButtonBorder.copy(brush = SolidColor(
+                        MaterialTheme.colorScheme.outline
+                    )
+                    )
                 ) {
-                    Text("Rate", color = Color.Gray, fontSize = 15.sp)
+                    Text("Rate", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp)
                 }
             }
         }
@@ -229,23 +259,46 @@ fun HistoryOrderCard(order: HistoryOrder) {
 @Composable
 private fun EmptyOrdersView() {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_empty_box), // Add a suitable drawable
+            painter = painterResource(id = R.drawable.ic_empty_box),
             contentDescription = "No Orders",
             modifier = Modifier.size(120.dp)
         )
         Spacer(modifier = Modifier.height(24.dp))
-        Text("No Upcoming Orders", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("You haven't placed an order yet. Your upcoming orders will be shown here.", color = Color.Gray, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
+        Text("No Upcoming Orders", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Text("You haven't placed an order yet. Your upcoming orders will be shown here.", color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp))
     }
 }
-// THE FIX: The preview now passes a dummy NavController, which satisfies the function's requirement.
-@Preview(showBackground = true)
+
+// --- Previews ---
+
+@Preview(showBackground = true, name = "My Orders - Light")
 @Composable
-fun MyOrdersUpcomingScreenPreview() {
-    MyOrdersUpcomingScreen(navController = rememberNavController())
+fun MyOrdersUpcomingScreenPreviewLight() {
+    // Add a sample upcoming order for the preview
+    DemoDataProvider.placedUpcomingOrders.clear()
+    DemoDataProvider.placedUpcomingOrders.add(
+        UpcomingOrder("1001", "McDonald's", listOf(CartItem("c1", "Big Mac", "Burger", 7.50f, 1, R.drawable.img_burger)), "Food on the way", 15, R.drawable.mcdonalds_img)
+    )
+    AppetitoTheme(useDarkTheme = false) {
+        MyOrdersUpcomingScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "My Orders - Dark")
+@Composable
+fun MyOrdersUpcomingScreenPreviewDark() {
+    DemoDataProvider.placedUpcomingOrders.clear()
+    DemoDataProvider.placedUpcomingOrders.add(
+        UpcomingOrder("1001", "McDonald's", listOf(CartItem("c1", "Big Mac", "Burger", 7.50f, 1, R.drawable.img_burger)), "Food on the way", 15, R.drawable.mcdonalds_img)
+    )
+    AppetitoTheme(useDarkTheme = true) {
+        MyOrdersUpcomingScreen(navController = rememberNavController())
+    }
 }

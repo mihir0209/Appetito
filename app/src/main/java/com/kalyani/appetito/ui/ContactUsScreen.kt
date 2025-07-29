@@ -10,7 +10,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,10 +31,16 @@ fun ContactUsScreen(navController: NavHostController) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                // CHANGE: Use theme colors for the TopAppBar.
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        // CHANGE: Use the theme's background color.
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -43,18 +48,27 @@ fun ContactUsScreen(navController: NavHostController) {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("How can we help you?", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Text("Our team is ready to assist you. Please choose a contact method below.", color = Color.Gray)
+            // CHANGE: Use theme colors for text.
+            Text(
+                "How can we help you?",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Text(
+                "Our team is ready to assist you. Please choose a contact method below.",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
             ContactOptionCard(
-                iconRes = R.drawable.ic_chat, // Example icon
+                iconRes = R.drawable.ic_chat,
                 title = "Chat with Us",
                 subtitle = "Get instant support via live chat.",
                 onClick = { /* TODO: Open live chat */ }
             )
 
             ContactOptionCard(
-                iconRes = R.drawable.ic_email, // Example icon
+                iconRes = R.drawable.ic_email,
                 title = "Email Us",
                 subtitle = "Send us an email at support@appetito.com",
                 onClick = { /* TODO: Open email client */ }
@@ -66,9 +80,12 @@ fun ContactUsScreen(navController: NavHostController) {
 @Composable
 private fun ContactOptionCard(iconRes: Int, title: String, subtitle: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        // CHANGE: Use the theme's surface color for the card.
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -78,25 +95,40 @@ private fun ContactOptionCard(iconRes: Int, title: String, subtitle: String, onC
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                tint = Color(0xFFFE724C),
+                // CHANGE: Use the theme's primary color for the icon tint.
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(subtitle, color = Color.Gray, fontSize = 14.sp)
+                // CHANGE: Use onSurface for primary text on the card.
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+                // CHANGE: Use onSurfaceVariant for secondary text.
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color.Gray.copy(alpha = 0.7f)
+                // CHANGE: Use onSurfaceVariant for the arrow icon.
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
 }
 
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, name = "Contact Us Screen - Light")
 @Composable
-fun ContactUsScreenPreview() {
-    ContactUsScreen(navController= rememberNavController())
+fun ContactUsScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        ContactUsScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Contact Us Screen - Dark")
+@Composable
+fun ContactUsScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        ContactUsScreen(navController = rememberNavController())
+    }
 }

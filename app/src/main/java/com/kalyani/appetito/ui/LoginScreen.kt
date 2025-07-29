@@ -3,16 +3,12 @@ package ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.foundation.clickable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,25 +35,30 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            // CHANGE: Use theme background color
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // --- Decorative Circles (Adjusted for Theming) ---
         Box(
             modifier = Modifier
                 .size(96.dp)
                 .offset(x = (-46).dp, y = (-21).dp)
-                .border(36.dp, Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .border(36.dp, MaterialTheme.colorScheme.primary, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(165.dp)
                 .offset(x = (-5).dp, y = (-99).dp)
-                .background(Color(0xFFFFECE7), CircleShape)
+                // CHANGE: Use a subtle, theme-aware version of the primary color
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(181.dp)
                 .offset(x = 298.dp, y = (-109).dp)
-                .background(Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
 
         Column(
@@ -67,21 +68,24 @@ fun LoginScreen(
                 .padding(horizontal = 28.dp)
         ) {
             Spacer(modifier = Modifier.height(110.dp))
-            Text("Login", fontSize = 36.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
+            // CHANGE: Use onBackground color for title
+            Text("Login", fontSize = 36.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onBackground)
             Spacer(modifier = Modifier.height(28.dp))
             OutlinedTextField(
                 value = email.value,
                 onValueChange = { email.value = it },
-                label = { Text("E-mail", color = Color(0xFF9796A1), fontSize = 16.sp) },
+                label = { Text("E-mail", fontSize = 16.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color(0xFFFE724C),
-                    unfocusedIndicatorColor = Color(0xFFEEEEEE),
-                    focusedLabelColor = Color(0xFFFE724C),
-                    unfocusedLabelColor = Color(0xFF9796A1),
-                    focusedTextColor = Color(0xFF111719),
-                    unfocusedTextColor = Color(0xFF111719),
+                // CHANGE: Use theme-aware colors for text field
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                 ),
@@ -91,16 +95,18 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password.value,
                 onValueChange = { password.value = it },
-                label = { Text("Password", color = Color(0xFF9796A1), fontSize = 16.sp) },
+                label = { Text("Password", fontSize = 16.sp) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color(0xFFFE724C),
-                    unfocusedIndicatorColor = Color(0xFFEEEEEE),
-                    focusedLabelColor = Color(0xFFFE724C),
-                    unfocusedLabelColor = Color(0xFF9796A1),
-                    focusedTextColor = Color(0xFF111719),
-                    unfocusedTextColor = Color(0xFF111719),
+                // CHANGE: Use theme-aware colors for text field
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
                 ),
@@ -112,7 +118,8 @@ fun LoginScreen(
             ) {
                 Text(
                     "Forgot password?",
-                    color = Color(0xFFFE724C),
+                    // CHANGE: Use primary color for clickable text
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
@@ -124,12 +131,16 @@ fun LoginScreen(
             Button(
                 onClick = onLoginSuccess,
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                // CHANGE: Use theme colors for the main button
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
             ) {
-                Text("LOGIN", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("LOGIN", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -138,29 +149,35 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("Don’t have an account? ", color = Color(0xFF5B5B5E), fontSize = 14.sp)
+                Text("Don’t have an account? ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                 Text(
                     "Sign Up",
-                    color = Color(0xFFFE724C),
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { onNavigateToSignUp() }
                 )
             }
 
-
             Spacer(modifier = Modifier.height(100.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color(0xFFEEEEEE)))
+                // CHANGE: Use outline color for divider
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline))
                 Text(
                     "  Sign up with  ",
-                    color = Color(0xFF5B5B5E),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 14.sp
                 )
-                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color(0xFFEEEEEE)))
+                Box(modifier = Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(MaterialTheme.colorScheme.outline))
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -173,7 +190,8 @@ fun LoginScreen(
                 Button(
                     onClick = onFacebookLogin,
                     shape = RoundedCornerShape(22.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    // CHANGE: Use surface color for container
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = ButtonDefaults.buttonElevation(2.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -187,6 +205,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         "FACEBOOK",
+                        // Facebook brand color should not change with the theme.
                         color = Color(0xFF1877F3),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp
@@ -196,7 +215,7 @@ fun LoginScreen(
                 Button(
                     onClick = onGoogleLogin,
                     shape = RoundedCornerShape(22.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = ButtonDefaults.buttonElevation(2.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -210,7 +229,8 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         "GOOGLE",
-                        color = Color(0xFF5B5B5E),
+                        // CHANGE: Use onSurface color to be visible in dark mode
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp
                     )
@@ -221,14 +241,26 @@ fun LoginScreen(
     }
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Login Screen - Light")
 @Composable
-fun LoginScreenPreview() {
-    LoginScreen(
-        onLoginSuccess = {},
-        onNavigateToSignUp = {},
-        onForgotPassword = {},
-        onFacebookLogin = {},
-        onGoogleLogin = {}
-    )
+fun LoginScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        LoginScreen(
+            onLoginSuccess = {}, onNavigateToSignUp = {}, onForgotPassword = {},
+            onFacebookLogin = {}, onGoogleLogin = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Login Screen - Dark")
+@Composable
+fun LoginScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        LoginScreen(
+            onLoginSuccess = {}, onNavigateToSignUp = {}, onForgotPassword = {},
+            onFacebookLogin = {}, onGoogleLogin = {}
+        )
+    }
 }

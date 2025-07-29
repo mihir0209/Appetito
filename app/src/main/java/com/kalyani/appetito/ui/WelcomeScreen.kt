@@ -25,11 +25,11 @@ import com.kalyani.appetito.R
 
 @Composable
 fun WelcomeScreen(
-    onSkip: () -> Unit = {},
-    onSignIn: () -> Unit = {},
-    onGoogle: () -> Unit = {},
-    onFacebook: () -> Unit = {},
-    onEmailOrPhone: () -> Unit = {}
+    onSkip: () -> Unit,
+    onSignIn: () -> Unit,
+    onGoogle: () -> Unit,
+    onFacebook: () -> Unit,
+    onEmailOrPhone: () -> Unit
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -41,6 +41,7 @@ fun WelcomeScreen(
             modifier = Modifier.fillMaxSize()
         )
 
+        // The dark gradient overlay is a design choice that works for both themes.
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -57,38 +58,37 @@ fun WelcomeScreen(
                 )
         )
 
+        // The Skip button should be theme-aware.
         Button(
             onClick = onSkip,
             shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary
+            ),
             elevation = ButtonDefaults.buttonElevation(4.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 50.dp, end = 24.dp)
         ) {
-            Text(
-                "Skip",
-                color = Color(0xFFFE724C),
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Text("Skip", fontSize = 14.sp, fontWeight = FontWeight.Medium)
         }
 
+        // This content sits on a light part of the background image.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 25.dp)
-                .padding(bottom = 500.dp),
+                .padding(horizontal = 25.dp, vertical = 300.dp), // Adjusted padding
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Welcome text
             Text(
                 buildAnnotatedString {
                     withStyle(
                         SpanStyle(
-                            color = Color.Black,
+                            // This text should contrast with the light background image part
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold,
                             fontSize = 46.sp
                         )
@@ -97,7 +97,7 @@ fun WelcomeScreen(
                     }
                     withStyle(
                         SpanStyle(
-                            color = Color(0xFFFE724C),
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 36.sp,
                         )
@@ -107,161 +107,87 @@ fun WelcomeScreen(
                 },
                 lineHeight = 42.sp,
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Text(
                 "Your favourite foods delivered\nfast at your door.",
-                color = Color.Black.copy(alpha = 0.9f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
                 lineHeight = 22.sp
             )
         }
+
+        // This content sits on the dark gradient overlay.
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 32.dp)
-                .padding(bottom = 30.dp),
+                .padding(horizontal = 32.dp, vertical = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.5f))
-                )
-                Text(
-                    "  sign in with  ",
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.5f))
-                )
+                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
+                Text("  sign in with  ", color = Color.White, fontSize = 14.sp)
+                Box(modifier = Modifier.weight(1f).height(1.dp).background(Color.White.copy(alpha = 0.5f)))
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
+                // Social login buttons are theme-aware.
                 Button(
                     onClick = onFacebook,
-                    shape = RoundedCornerShape(50.dp), // Fully rounded
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = ButtonDefaults.buttonElevation(4.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
+                    modifier = Modifier.weight(1f).height(56.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.facebook_icon),
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "FACEBOOK",
-                            color = Color(0xFF1877F3),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
+                    Image(painter = painterResource(id = R.drawable.facebook_icon), contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("FACEBOOK", color = Color(0xFF1877F3), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
-
                 Button(
                     onClick = onGoogle,
-                    shape = RoundedCornerShape(50.dp), // Fully rounded
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = ButtonDefaults.buttonElevation(4.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(56.dp)
+                    modifier = Modifier.weight(1f).height(56.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.google_icon),
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "GOOGLE",
-                            color = Color(0xFF5B5B5E),
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp
-                        )
-                    }
+                    Image(painter = painterResource(id = R.drawable.google_icon), contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("GOOGLE", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                 }
             }
-
             Spacer(modifier = Modifier.height(20.dp))
-
             OutlinedButton(
                 onClick = onEmailOrPhone,
-                shape = RoundedCornerShape(50.dp), // Fully rounded
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = Color.White
-                ),
+                shape = RoundedCornerShape(50.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
                 border = androidx.compose.foundation.BorderStroke(2.dp, Color.White),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text(
-                    "Start with email or phone",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text("Start with email or phone", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
-
             Spacer(modifier = Modifier.height(32.dp))
-
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Already have an account? ",
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontSize = 14.sp
-                )
-                Text(
-                    "Sign In",
-                    color = Color.White,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable(onClick = onSignIn)
-                )
+                Text("Already have an account? ", color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
+                Text("Sign In", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable(onClick = onSignIn))
             }
         }
-
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Welcome Screen")
 @Composable
 fun WelcomeScreenPreview() {
-    WelcomeScreen()
+    AppetitoTheme {
+        WelcomeScreen({}, {}, {}, {}, {})
+    }
 }

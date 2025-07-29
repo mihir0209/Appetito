@@ -4,8 +4,10 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Star
@@ -25,6 +27,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReviewRestaurantScreen(navController: NavHostController) {
     var rating by remember { mutableStateOf(4) }
@@ -37,38 +40,41 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
         5 -> "Excellent"
         else -> ""
     }
+    // Using a sample restaurant from the data provider
+    val restaurant = DemoDataProvider.featuredRestaurants.first()
 
     Scaffold(
-        containerColor = Color.White
+        // The Scaffold will apply the theme's background color
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()), // Make the column scrollable
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top section with back button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 16.dp)
             ) {
-                // Back Button with shadow
                 Card(
                     shape = CircleShape,
                     modifier = Modifier
                         .size(44.dp)
                         .align(Alignment.CenterStart)
                         .shadow(elevation = 8.dp, shape = CircleShape)
-                        .clickable { navController.popBackStack() }, // Standard "Go Back" action
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                        .clickable { navController.popBackStack() },
+                    // CHANGE: Use theme surface color
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.Black
+                            // CHANGE: Use onSurface color
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -79,11 +85,11 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
             Card(
                 shape = RoundedCornerShape(24.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.pizza_hut_logo), // Placeholder logo
-                    contentDescription = "Pizza Hut Logo",
+                    painter = painterResource(id = restaurant.imageRes),
+                    contentDescription = "${restaurant.name} Logo",
                     modifier = Modifier
                         .size(100.dp)
                         .padding(16.dp)
@@ -93,9 +99,10 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
             Spacer(modifier = Modifier.height(48.dp))
 
             Text(
-                text = "How was your last order from Pizza Hut?", // Corrected typo
+                text = "How was your last order from ${restaurant.name}?",
                 fontSize = 26.sp,
-                color = Color.Black,
+                // CHANGE: Use onBackground color
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
                 lineHeight = 38.sp
@@ -106,7 +113,8 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
             Text(
                 text = ratingText,
                 fontSize = 22.sp,
-                color = Color(0xFFFE724C),
+                // CHANGE: Use primary color
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold
             )
 
@@ -117,8 +125,9 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 for (i in 1..5) {
+                    // CHANGE: Use a theme color for the unselected star
                     val starColor by animateColorAsState(
-                        targetValue = if (i <= rating) Color(0xFFFFC529) else Color(0xFFE8E8E8),
+                        targetValue = if (i <= rating) Color(0xFFFFC529) else MaterialTheme.colorScheme.surfaceVariant,
                         label = "starColorAnimation"
                     )
                     Icon(
@@ -139,41 +148,57 @@ fun ReviewRestaurantScreen(navController: NavHostController) {
                 value = review,
                 onValueChange = { review = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Write your review...", color = Color.Gray.copy(alpha = 0.5f)) }, // Improved placeholder
+                placeholder = { Text("Write your review...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                // CHANGE: Use theme colors for TextField
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color(0xFFFE724C),
-                    unfocusedIndicatorColor = Color.LightGray,
-                    cursorColor = Color(0xFFFE724C)
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = MaterialTheme.colorScheme.outline,
+                    cursorColor = MaterialTheme.colorScheme.primary
                 )
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f, fill = true)) // Pushes the button to the bottom
 
-            // Submit button
             Button(
                 onClick = { /* TODO: Submit review logic */ },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp)
                     .height(60.dp),
-                shape = RoundedCornerShape(50), // Pill shape
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+                shape = RoundedCornerShape(50),
+                // CHANGE: Use theme colors for button
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text(
                     text = "SUBMIT",
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.White
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
     }
 }
 
-@Preview(showBackground = true)
+
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Review Restaurant - Light")
 @Composable
-fun ReviewRestaurantScreenPreview() {
-    ReviewRestaurantScreen(navController = rememberNavController())
+fun ReviewRestaurantScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        ReviewRestaurantScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Review Restaurant - Dark")
+@Composable
+fun ReviewRestaurantScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        ReviewRestaurantScreen(navController = rememberNavController())
+    }
 }

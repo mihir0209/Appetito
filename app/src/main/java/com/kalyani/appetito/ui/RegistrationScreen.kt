@@ -5,11 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,83 +17,124 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Preview(showBackground = true)
 @Composable
 fun RegistrationScreen(
-    onSend: () -> Unit = {}
+    onSend: () -> Unit
 ) {
     val phone = remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            // CHANGE: Use theme background color
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // --- Decorative Circles (Theme-Aware) ---
         Box(
             modifier = Modifier
                 .size(96.dp)
                 .offset(x = (-46).dp, y = (-21).dp)
-                .border(36.dp, Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .border(36.dp, MaterialTheme.colorScheme.primary, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(165.dp)
                 .offset(x = (-5).dp, y = (-99).dp)
-                .background(Color(0xFFFFECE7), CircleShape)
+                // CHANGE: Use a subtle, theme-aware version of the primary color
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(181.dp)
                 .offset(x = 298.dp, y = (-109).dp)
-                .background(Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
-        // Title
+
+        // --- Content Column (More Robust Layout) ---
         Column(
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 26.dp, top = 180.dp)
-        ) {
-            Text("Registration", fontSize = 36.sp, fontWeight = FontWeight.SemiBold, color = Color.Black)
-        }
-        // Description
-        Text(
-            "Enter your phone number to verify your account",
-            color = Color(0xFF9796A1),
-            fontSize = 14.sp,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 26.dp, top = 234.dp)
-        )
-        // Phone field
-        OutlinedTextField(
-            value = phone.value,
-            onValueChange = { phone.value = it },
-            label = { Text("Phone number", color = Color(0xFF9796A1), fontSize = 16.sp) },
-            modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(horizontal = 28.dp)
-                .offset(y = 320.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color(0xFFFE724C),
-                unfocusedIndicatorColor = Color(0xFFEEEEEE),
-                focusedTextColor = Color(0xFF111719),
-                unfocusedTextColor = Color(0xFF111719)
+        ) {
+            Spacer(modifier = Modifier.height(180.dp))
+
+            Text(
+                "Registration",
+                fontSize = 36.sp,
+                fontWeight = FontWeight.SemiBold,
+                // CHANGE: Use onBackground for main titles
+                color = MaterialTheme.colorScheme.onBackground
             )
 
-        )
-        // Send Button
-        Button(
-            onClick = onSend,
-            shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 180.dp)
-                .height(60.dp)
-                .width(248.dp)
-        ) {
-            Text("Send", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                "Enter your phone number to verify your account",
+                // CHANGE: Use onSurfaceVariant for descriptive text
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 14.sp
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = phone.value,
+                onValueChange = { phone.value = it },
+                label = { Text("Phone number", fontSize = 16.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                singleLine = true,
+                // CHANGE: Use theme-aware colors for text field
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            // This spacer pushes the button to the bottom
+            Spacer(modifier = Modifier.weight(1f))
+
+            Button(
+                onClick = onSend,
+                shape = RoundedCornerShape(28.dp),
+                // CHANGE: Use theme colors for the main button
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .height(60.dp)
+                    .width(248.dp)
+            ) {
+                Text("SEND", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            }
+
+            Spacer(modifier = Modifier.height(120.dp))
         }
+    }
+}
+
+
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Registration Screen - Light")
+@Composable
+fun RegistrationScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        RegistrationScreen(onSend = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Registration Screen - Dark")
+@Composable
+fun RegistrationScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        RegistrationScreen(onSend = {})
     }
 }

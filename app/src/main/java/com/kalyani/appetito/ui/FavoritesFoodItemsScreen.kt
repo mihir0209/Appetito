@@ -25,6 +25,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
+// Data classes and sample data remain the same
 data class FavoriteFood(val name: String, val description: String, val price: Float, val rating: Float, val reviews: Int, val imageRes: Int)
 data class FavoriteRestaurant(val name: String, val categories: String, val deliveryTime: String, val imageRes: Int)
 
@@ -40,7 +41,6 @@ fun sampleFavoriteRestaurants() = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// THE FIX 1: Add the nestedNavController parameter.
 fun FavoritesFoodItemsScreen(nestedNavController: NavHostController) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val favoriteFoods = remember { sampleFavoriteFoods() }
@@ -53,7 +53,6 @@ fun FavoritesFoodItemsScreen(nestedNavController: NavHostController) {
             TopAppBar(
                 title = { Text("Favorites", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    // THE FIX 2: Implement the back navigation.
                     IconButton(onClick = {
                         nestedNavController.navigate(BottomNavTab.Home.route) {
                             popUpTo(nestedNavController.graph.startDestinationId)
@@ -63,15 +62,44 @@ fun FavoritesFoodItemsScreen(nestedNavController: NavHostController) {
                         Icon(painter = painterResource(id = R.drawable.ic_back), contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                // CHANGE: Use theme colors for the TopAppBar.
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        // CHANGE: Use the theme's background color.
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
-            TabRow(selectedTabIndex = selectedTabIndex, containerColor = Color.White, indicator = { tabPositions -> TabRowDefaults.SecondaryIndicator(Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]), color = Color(0xFFFE724C)) }) {
-                Tab(selected = selectedTabIndex == 0, onClick = { selectedTabIndex = 0 }, text = { Text("Food Items", color = if (selectedTabIndex == 0) Color(0xFFFE724C) else Color.Gray) })
-                Tab(selected = selectedTabIndex == 1, onClick = { selectedTabIndex = 1 }, text = { Text("Restaurants", color = if (selectedTabIndex == 1) Color(0xFFFE724C) else Color.Gray) })
+            TabRow(
+                selectedTabIndex = selectedTabIndex,
+                // CHANGE: Use theme colors for the TabRow.
+                containerColor = MaterialTheme.colorScheme.surface,
+                indicator = { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        Modifier.tabIndicatorOffset(tabPositions[selectedTabIndex]),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            ) {
+                // CHANGE: Use theme colors for tab text.
+                Tab(
+                    selected = selectedTabIndex == 0,
+                    onClick = { selectedTabIndex = 0 },
+                    text = { Text("Food Items") },
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Tab(
+                    selected = selectedTabIndex == 1,
+                    onClick = { selectedTabIndex = 1 },
+                    text = { Text("Restaurants") },
+                    selectedContentColor = MaterialTheme.colorScheme.primary,
+                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             AnimatedContent(
@@ -101,26 +129,32 @@ fun FavoriteFoodCard(food: FavoriteFood) {
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().clickable { /* TODO: Navigate to food details */ }
+        // CHANGE: Use theme surface color.
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* TODO: Navigate to food details */ }
     ) {
         Column {
             Image(
                 painter = painterResource(id = food.imageRes),
                 contentDescription = food.name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().height(160.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
             )
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(food.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Text(food.description, fontSize = 14.sp, color = Color.Gray, maxLines = 1)
+                // CHANGE: Use theme colors for text.
+                Text(food.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(food.description, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("$${String.format("%.2f", food.price)}", fontSize = 20.sp, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
+                    Text("$${String.format("%.2f", food.price)}", fontSize = 20.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(painter = painterResource(id = R.drawable.ic_star), contentDescription = "Rating", tint = Color(0xFFFFC529), modifier = Modifier.size(16.dp))
-                    Text(food.rating.toString(), fontSize = 14.sp, color = Color.Black, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
-                    Text(" (${food.reviews}+)", fontSize = 12.sp, color = Color.Gray, modifier = Modifier.padding(start = 4.dp))
+                    Text(food.rating.toString(), fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(start = 4.dp))
+                    Text(" (${food.reviews}+)", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
                 }
             }
         }
@@ -132,8 +166,11 @@ fun FavoriteRestaurantCard(restaurant: FavoriteRestaurant) {
     Card(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth().clickable { /* TODO: Navigate to restaurant details */ }
+        // CHANGE: Use theme surface color.
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { /* TODO: Navigate to restaurant details */ }
     ) {
         Row(
             modifier = Modifier.padding(12.dp),
@@ -143,22 +180,35 @@ fun FavoriteRestaurantCard(restaurant: FavoriteRestaurant) {
                 painter = painterResource(id = restaurant.imageRes),
                 contentDescription = restaurant.name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp))
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(12.dp))
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(restaurant.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Text(restaurant.categories, fontSize = 14.sp, color = Color.Gray)
+                // CHANGE: Use theme colors for text.
+                Text(restaurant.name, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text(restaurant.categories, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(restaurant.deliveryTime, fontSize = 14.sp, color = Color.Gray)
+                Text(restaurant.deliveryTime, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Favorites Screen - Light")
 @Composable
-fun FavoritesFoodItemsScreenPreview() {
-    FavoritesFoodItemsScreen(nestedNavController = rememberNavController())
+fun FavoritesFoodItemsScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        FavoritesFoodItemsScreen(nestedNavController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Favorites Screen - Dark")
+@Composable
+fun FavoritesFoodItemsScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        FavoritesFoodItemsScreen(nestedNavController = rememberNavController())
+    }
 }

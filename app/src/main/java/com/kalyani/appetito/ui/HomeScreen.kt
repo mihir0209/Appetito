@@ -52,20 +52,12 @@ fun HomeScreen(
     val cornerRadius = lerp(0f, 32f, animationProgress)
     val shadowElevation = lerp(0f, 24f, animationProgress)
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFFFE724C).copy(alpha = 0.9f))) {
+    // CHANGE: Use theme primary color for the background behind the animated screen.
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f))) {
         SideMenuFigma(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(280.dp)
-                // THE FIX: The swipe-to-close gesture is restored here.
-                .pointerInput(Unit) {
-                    detectHorizontalDragGestures { change, dragAmount ->
-                        if (dragAmount < -5) { // Swipe right-to-left
-                            menuOpen = false
-                            change.consume()
-                        }
-                    }
-                },
+                .width(280.dp),
             mainNavController = mainNavController,
             nestedNavController = nestedNavController
         )
@@ -77,20 +69,20 @@ fun HomeScreen(
                     this.shadowElevation = shadowElevation; this.transformOrigin = TransformOrigin(0f, 0.5f)
                 }
                 .clip(RoundedCornerShape(cornerRadius.roundToInt().dp))
-                // THE FIX: The swipe-to-open gesture is restored here.
-                .pointerInput(menuOpen) {
-                    if (!menuOpen) {
-                        var dragStartedOnEdge = false
-                        detectHorizontalDragGestures(
-                            onDragStart = { offset -> dragStartedOnEdge = offset.x < 40.dp.toPx() },
-                            onHorizontalDrag = { change, dragAmount ->
-                                if (dragStartedOnEdge && dragAmount > 0) { // Swipe left-to-right from edge
-                                    menuOpen = true
-                                    change.consume()
-                                }
+                // GESTURE IMPLEMENTATION: Combines swipe-to-open and swipe-to-close gestures.
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { },
+                        onHorizontalDrag = { change, dragAmount ->
+                            if (dragAmount > 5) { // Swipe left-to-right to open
+                                menuOpen = true
+                                change.consume()
+                            } else if (dragAmount < -5) { // Swipe right-to-left to close
+                                menuOpen = false
+                                change.consume()
                             }
-                        )
-                    }
+                        }
+                    )
                 }
                 .clickable(enabled = menuOpen, onClick = { menuOpen = false }, indication = null, interactionSource = remember { MutableInteractionSource() })
         ) {
@@ -108,26 +100,25 @@ fun HomeScreenContent(
     nestedNavController: NavHostController,
     mainNavController: NavHostController
 ) {
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAddressSheet by remember { mutableStateOf(false) }
     val addresses = DemoDataProvider.savedAddresses
-
-    // THE FIX: Get the state object, but also get its value for easy use.
     val selectedAddressState = DemoDataProvider.selectedAddress
     val selectedAddress = selectedAddressState.value
-
     val featuredRestaurants = DemoDataProvider.featuredRestaurants
     val popularItems = DemoDataProvider.popularItems
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.fillMaxSize().background(Color.White).verticalScroll(rememberScrollState())
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState())
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onMenuClick) { Icon(painterResource(id = R.drawable.ic_menu), contentDescription = "Menu", tint = Color.Black) }
+                IconButton(onClick = onMenuClick) { Icon(painterResource(id = R.drawable.ic_menu), contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground) }
                 Spacer(modifier = Modifier.weight(1f))
                 Row(
                     modifier = Modifier.clickable { showAddressSheet = true },
@@ -135,44 +126,57 @@ fun HomeScreenContent(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Deliver to", color = Color.Gray, fontSize = 12.sp)
-                        // THE FIX: Correctly access the 'fullAddress' property from the value.
-                        Text(selectedAddress.fullAddress, color = Color(0xFFFE724C), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Deliver to", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+                        Text(selectedAddress.fullAddress, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
-                    Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = Color(0xFFFE724C), modifier = Modifier.size(20.dp).padding(start = 4.dp))
+                    Icon(painter = painterResource(id = R.drawable.ic_expand), contentDescription = "Change Address", tint = MaterialTheme.colorScheme.primary, modifier = Modifier
+                        .size(20.dp)
+                        .padding(start = 4.dp))
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Image(painter = painterResource(id = R.drawable.image_13), contentDescription = "Profile", modifier = Modifier.size(48.dp).clip(CircleShape).clickable { nestedNavController.navigate(BottomNavTab.Profile.route) })
+                Image(painter = painterResource(id = R.drawable.image_13), contentDescription = "Profile", modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .clickable { nestedNavController.navigate(BottomNavTab.Profile.route) })
             }
 
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(text = "What would you like to order?", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 36.sp, color = Color.Black)
+                Text(text = "What would you like to order?", fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 36.sp, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(20.dp))
                 OutlinedTextField(
                     value = "", onValueChange = {},
-                    placeholder = { Text("Find for food or restaurant...", color = Color.Gray) },
-                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_search), "Search", tint = Color(0xFFFE724C)) },
-                    trailingIcon = { Box(modifier = Modifier.background(Color(0xFFFE724C).copy(alpha = 0.1f), RoundedCornerShape(10.dp)).padding(10.dp)) { Icon(painterResource(id = R.drawable.ic_filter), "Filter", tint = Color(0xFFFE724C)) } },
+                    placeholder = { Text("Find for food or restaurant...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                    leadingIcon = { Icon(painterResource(id = R.drawable.ic_search), "Search", tint = MaterialTheme.colorScheme.primary) },
+                    trailingIcon = { Box(modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(10.dp))
+                        .padding(10.dp)) { Icon(painterResource(id = R.drawable.ic_filter), "Filter", tint = MaterialTheme.colorScheme.primary) } },
                     shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = Color.Transparent, focusedBorderColor = Color(0xFFFE724C), unfocusedContainerColor = Color(0xFFF0F0F0), focusedContainerColor = Color(0xFFF0F0F0)),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        unfocusedBorderColor = Color.Transparent,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Row(modifier = Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 CategoryChip("Burger", R.drawable.img_burger, selected = true); CategoryChip("Donat", R.drawable.img_burger); CategoryChip("Pizza", R.drawable.img_burger); CategoryChip("Mexican", R.drawable.img_burger); CategoryChip("Asian", R.drawable.img_burger)
             }
             Spacer(modifier = Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Featured Restaurants", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black, modifier = Modifier.weight(1f))
-                    Text("View All >", fontSize = 14.sp, color = Color(0xFFFE724C), modifier = Modifier.clickable { /* TODO */ })
+                    Text("Featured Restaurants", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, modifier = Modifier.weight(1f))
+                    Text("View All >", fontSize = 14.sp, color = MaterialTheme.colorScheme.primary, modifier = Modifier.clickable { /* TODO */ })
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(modifier = Modifier
+                    .horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     featuredRestaurants.forEach { restaurant ->
-                        // THE FIX: The onClick is defined HERE, where 'restaurant' exists.
                         RestaurantCard(
                             name = restaurant.name,
                             description = restaurant.description,
@@ -186,11 +190,10 @@ fun HomeScreenContent(
             }
             Spacer(modifier = Modifier.height(24.dp))
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text("Popular Items", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("Popular Items", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(modifier = Modifier.height(16.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     popularItems.forEach { item ->
-                        // THE FIX: The onClick is defined HERE, where 'item' exists.
                         PopularItemCard(
                             name = item.name,
                             restaurant = item.restaurantName,
@@ -205,13 +208,15 @@ fun HomeScreenContent(
         }
 
         if (showAddressSheet) {
-            ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
+            ModalBottomSheet(
+                onDismissRequest = { showAddressSheet = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
                 AddressSheetContent(
                     addresses = addresses,
-                    // THE FIX: Pass the address object (the .value) to the sheet.
                     selectedAddress = selectedAddress,
                     onAddressSelected = { newAddress ->
-                        // THE FIX: Update the .value of the state object.
                         selectedAddressState.value = newAddress
                         showAddressSheet = false
                     },
@@ -228,27 +233,46 @@ fun HomeScreenContent(
 @Composable
 private fun AddressListItem(address: Address, isSelected: Boolean, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painter = painterResource(id = R.drawable.ic_location), contentDescription = null, tint = if (isSelected) Color(0xFFFE724C) else Color.Gray, modifier = Modifier.size(24.dp))
+        Icon(
+            painter = painterResource(id = R.drawable.ic_location),
+            contentDescription = null,
+            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text = address.fullAddress, modifier = Modifier.weight(1f), fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
-        RadioButton(selected = isSelected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFE724C)))
+        Text(
+            text = address.fullAddress,
+            modifier = Modifier.weight(1f),
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        RadioButton(
+            selected = isSelected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        )
     }
 }
 
 @Composable
 fun SideMenuFigma(modifier: Modifier = Modifier, mainNavController: NavHostController, nestedNavController: NavHostController) {
     val user = DemoDataProvider.user
-    Column(modifier = modifier.background(Color.White).padding(24.dp)) {
+    Column(modifier = modifier.background(MaterialTheme.colorScheme.surface).padding(24.dp)) {
         Spacer(modifier = Modifier.height(40.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(painterResource(id = user.profileImageRes), "Profile", modifier = Modifier.size(64.dp).clip(CircleShape))
+            Image(painterResource(id = user.profileImageRes), "Profile", modifier = Modifier
+                .size(64.dp)
+                .clip(CircleShape))
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(user.name, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = Color.Black)
-                Text(user.email, fontSize = 14.sp, color = Color.Gray)
+                Text(user.name, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurface)
+                Text(user.email, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(modifier = Modifier.height(48.dp))
@@ -263,12 +287,12 @@ fun SideMenuFigma(modifier: Modifier = Modifier, mainNavController: NavHostContr
         Button(
             onClick = { mainNavController.navigate("login") { popUpTo("main_app") { inclusive = true }; launchSingleTop = true } },
             shape = RoundedCornerShape(28.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
-            Icon(painterResource(id = R.drawable.ic_logout), "Logout", tint = Color.White)
+            Icon(painterResource(id = R.drawable.ic_logout), "Logout", tint = MaterialTheme.colorScheme.onPrimary)
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Log Out", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text("Log Out", color = MaterialTheme.colorScheme.onPrimary, fontSize = 16.sp, fontWeight = FontWeight.Medium)
         }
         Spacer(modifier = Modifier.height(24.dp))
     }
@@ -276,10 +300,13 @@ fun SideMenuFigma(modifier: Modifier = Modifier, mainNavController: NavHostContr
 
 @Composable
 fun SideMenuItemFigma(title: String, iconRes: Int, onClick: () -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(painter = painterResource(id = iconRes), contentDescription = title, tint = Color.Gray, modifier = Modifier.size(24.dp))
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .clickable(onClick = onClick)
+        .padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painter = painterResource(id = iconRes), contentDescription = title, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
         Spacer(modifier = Modifier.width(18.dp))
-        Text(title, fontSize = 16.sp, color = Color.Black, fontWeight = FontWeight.Medium)
+        Text(title, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
     }
 }
 
@@ -290,59 +317,93 @@ fun CategoryChip(name: String, imageRes: Int, selected: Boolean = false) {
             modifier = Modifier.size(70.dp),
             shape = CircleShape,
             elevation = CardDefaults.cardElevation(defaultElevation = if (selected) 8.dp else 2.dp),
-            colors = CardDefaults.cardColors(containerColor = if (selected) Color(0xFFFE724C) else Color.White)
+            colors = CardDefaults.cardColors(containerColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
         ) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Image(painter = painterResource(id = imageRes), contentDescription = name, modifier = Modifier.size(35.dp))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(name, color = if (selected) Color(0xFFFE724C) else Color.Gray, fontSize = 14.sp, textAlign = TextAlign.Center, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal)
+        Text(
+            name,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontSize = 14.sp,
+            textAlign = TextAlign.Center,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
+        )
     }
 }
 
-// THE FIX: The Card is now just a UI component. The onClick is passed in.
 @Composable
 fun RestaurantCard(name: String, description: String, deliveryInfo: String, imageRes: Int, rating: Float, onClick: () -> Unit) {
-    Card(onClick = onClick, shape = RoundedCornerShape(24.dp), modifier = Modifier.width(280.dp).height(200.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
+    Card(onClick = onClick, shape = RoundedCornerShape(24.dp), modifier = Modifier
+        .width(280.dp)
+        .height(200.dp), elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)) {
         Box {
             Image(painter = painterResource(id = imageRes), contentDescription = name, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
-            Column(modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
+            Column(modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)) {
                 Text(name, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.White)
                 Text(description, color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(deliveryInfo, color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
             }
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).background(Color.White, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 4.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
                 Icon(Icons.Default.Star, "Star", tint = Color(0xFFFFC529), modifier = Modifier.size(12.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("$rating", color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Text("$rating", color = MaterialTheme.colorScheme.onSurface, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
-// THE FIX: The onClick is passed in and applied to the modifier. No invalid assignment.
 @Composable
 fun PopularItemCard(name: String, restaurant: String, price: String, imageRes: Int, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().background(Color(0xFFF0F0F0), RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(painter = painterResource(id = imageRes), contentDescription = name, modifier = Modifier.size(60.dp).clip(RoundedCornerShape(12.dp)))
+        Image(painter = painterResource(id = imageRes), contentDescription = name, modifier = Modifier
+            .size(60.dp)
+            .clip(RoundedCornerShape(12.dp)))
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = Color.Black)
-            Text(restaurant, fontSize = 14.sp, color = Color.Gray)
+            Text(name, fontWeight = FontWeight.SemiBold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
+            Text(restaurant, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text(price, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFE724C))
+        Text(price, fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
     }
 }
 
-@Preview(showBackground = true, device = "id:pixel_4")
+@Preview(showBackground = true, name = "Home Screen - Light")
 @Composable
-fun HomeScreenPreview() {
+fun HomeScreenPreviewLight() {
     val dummyNavController = rememberNavController()
-    HomeScreen(nestedNavController = dummyNavController, mainNavController = dummyNavController)
+    AppetitoTheme(useDarkTheme = false) {
+        HomeScreen(nestedNavController = dummyNavController, mainNavController = dummyNavController)
+    }
+}
+
+@Preview(showBackground = true, name = "Home Screen - Dark")
+@Composable
+fun HomeScreenPreviewDark() {
+    val dummyNavController = rememberNavController()
+    AppetitoTheme(useDarkTheme = true) {
+        HomeScreen(nestedNavController = dummyNavController, mainNavController = dummyNavController)
+    }
 }

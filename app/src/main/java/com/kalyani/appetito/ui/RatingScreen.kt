@@ -31,7 +31,6 @@ import com.kalyani.appetito.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// THE FIX 1: Add the NavController parameter. This is our standard pattern.
 fun RatingScreen(navController: NavHostController) {
     var rating by remember { mutableStateOf(4) }
     var review by remember { mutableStateOf("") }
@@ -44,35 +43,32 @@ fun RatingScreen(navController: NavHostController) {
         else -> ""
     }
 
-    // THE FIX 2: Use Scaffold for a consistent layout structure.
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { /* Title is empty for this design */ },
-                // THE FIX 3: Use the standard IconButton. It's clean and consistent.
+                title = { },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color.White // White icon for the image background
+                            // Keep white icon as it's on a dark image background
+                            tint = Color.White
                         )
                     }
                 },
-                // Make the TopAppBar transparent to see the image behind it.
+                // Transparent TopAppBar is a key part of the design
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { paddingValues ->
-        // Use LazyColumn for performance and to prevent content from drawing under the system bars.
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 0.dp) // We want the image to go to the very top
-                .background(Color.White),
+                // The LazyColumn now correctly inherits the Scaffold's themed background color
+                .padding(top = 0.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // --- Header Section with overlapping logo ---
             item {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -81,78 +77,96 @@ fun RatingScreen(navController: NavHostController) {
                     Image(
                         painter = painterResource(id = R.drawable.pizzahut_background),
                         contentDescription = "Pizza Background",
-                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
                         contentScale = ContentScale.Crop
                     )
-                    // The TopAppBar from the Scaffold will draw over this image.
-
                     Box(
                         modifier = Modifier
-                            .offset(y = 70.dp) // This pulls the logo down to overlap the content below
-                            .size(140.dp)
-                            .background(Color.White, CircleShape)
+                            .offset(y = 70.dp)
+                            // CHANGE: Use theme surface color for the logo background
+                            .background(MaterialTheme.colorScheme.surface, CircleShape)
                             .padding(8.dp)
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.pizza_hut_logo),
                             contentDescription = "Pizza Hut Logo",
-                            modifier = Modifier.fillMaxSize().clip(CircleShape)
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
                         )
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = "Verified",
+                            // Status color remains green
                             tint = Color(0xFF00C444),
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .size(36.dp)
-                                .background(Color.White, CircleShape)
+                                // CHANGE: Use theme surface color for the checkmark background
+                                .background(MaterialTheme.colorScheme.surface, CircleShape)
                                 .padding(2.dp)
                         )
                     }
                 }
             }
 
-            // --- Content Section ---
             item {
-                // Add a spacer to account for the overlapping logo
                 Column(
                     modifier = Modifier.padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(80.dp))
-                    Text(text = "Pizza Hut", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                    Spacer(modifier = Modifier.height(80.dp)) // Spacer for overlapping logo
+                    Text(text = "Pizza Hut", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "4102 Pretty View Lanenda", fontSize = 15.sp, color = Color(0xFF9796A1))
+                    Text(text = "4102 Pretty View Lanenda", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "● Order Delivered", fontSize = 15.sp, color = Color(0xFF53D776), fontWeight = FontWeight.Medium)
+                    Text(text = "● Order Delivered", fontSize = 15.sp, color = Color(0xFF53D776), fontWeight = FontWeight.Medium) // Status color remains green
                     Spacer(modifier = Modifier.height(24.dp))
-                    Text(text = "Please Rate Delivery Service", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Color(0xFF111719), textAlign = TextAlign.Center)
+                    Text(text = "Please Rate Delivery Service", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground, textAlign = TextAlign.Center)
                     Spacer(modifier = Modifier.height(24.dp))
                     Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                         for (i in 1..5) {
-                            val starColor by animateColorAsState(targetValue = if (i <= rating) Color(0xFFFFC529) else Color(0xFFF0F0F0), label = "starColorAnimation")
-                            Icon(imageVector = Icons.Filled.Star, contentDescription = "Star $i", tint = starColor, modifier = Modifier.size(48.dp).padding(4.dp).clickable { rating = i })
+                            // CHANGE: Use theme surfaceVariant for unselected stars
+                            val starColor by animateColorAsState(targetValue = if (i <= rating) Color(0xFFFFC529) else MaterialTheme.colorScheme.surfaceVariant, label = "starColorAnimation")
+                            Icon(imageVector = Icons.Filled.Star, contentDescription = "Star $i", tint = starColor, modifier = Modifier
+                                .size(48.dp)
+                                .padding(4.dp)
+                                .clickable { rating = i })
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = ratingText, fontSize = 18.sp, color = Color.Black.copy(alpha = 0.7f), fontWeight = FontWeight.SemiBold)
+                    Text(text = ratingText, fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.height(24.dp))
                     OutlinedTextField(
                         value = review,
                         onValueChange = { review = it },
-                        modifier = Modifier.fillMaxWidth().height(120.dp),
-                        placeholder = { Text("Write review", color = Color.Gray.copy(alpha = 0.8f)) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(120.dp),
+                        placeholder = { Text("Write review", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                         shape = RoundedCornerShape(16.dp),
-                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFFFE724C), unfocusedBorderColor = Color(0xFFE8E8E8))
+                        // CHANGE: Use theme colors for text field
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = { /* TODO: Submit rating logic */ },
-                        modifier = Modifier.fillMaxWidth().height(60.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp),
                         shape = RoundedCornerShape(30.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+                        // CHANGE: Use theme colors for button
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
                     ) {
-                        Text(text = "SUBMIT", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                        Text(text = "SUBMIT", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
@@ -161,9 +175,19 @@ fun RatingScreen(navController: NavHostController) {
     }
 }
 
-@Preview(showBackground = true)
+
+@Preview(showBackground = true, name = "Rating Screen - Light")
 @Composable
-fun RatingScreenPreview() {
-    // THE FIX 4: Update the preview to pass the dummy NavController.
-    RatingScreen(navController = rememberNavController())
+fun RatingScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        RatingScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Rating Screen - Dark")
+@Composable
+fun RatingScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        RatingScreen(navController = rememberNavController())
+    }
 }

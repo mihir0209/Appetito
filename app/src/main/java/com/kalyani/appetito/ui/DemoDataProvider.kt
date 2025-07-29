@@ -12,12 +12,11 @@ data class CartItem(val id: String, val name: String, val description: String, v
 data class Restaurant(val id: String, val name: String, val description: String, val deliveryInfo: String, val rating: Float, val imageRes: Int)
 data class PopularItem(val id: String, val name: String, val restaurantName: String, val price: Float, val imageRes: Int)
 data class CategoryItemData(val id: String, val name: String, val description: String, val price: Float, val rating: Float, val reviews: Int, val imageRes: Int)
-
-// THE FIX: The 'items' property is now correctly a List<CartItem>, and imageRes is included.
 data class UpcomingOrder(val id: String, val restaurant: String, val items: List<CartItem>, val status: String, val eta: Int, val imageRes: Int)
-
 data class HistoryOrder(val id: String, val restaurant: String, val items: Int, val date: String, val price: Float, val status: String, val imageRes: Int)
 data class FoodItemDetails(val id: String, val name: String, val description: String, val price: Float, val imageRes: Int, val rating: Float, val reviewCount: Int)
+// --- ADD THIS DATA CLASS ---
+data class Review(val id: Int, val name: String, val rating: Double, val date: String, val comment: String, val imageRes: Int)
 
 
 // --- SINGLE DATA PROVIDER OBJECT ---
@@ -27,14 +26,12 @@ object DemoDataProvider {
 
     val savedAddresses = mutableStateListOf(
         Address(1, "Kalyani Patil", "+91 98765 43210", "DYP College Campus", "Talsande, Kolhapur", "DYP, Talsande"),
-        Address(2, "John Doe", "+1 555-123-4567", "123 Main Street", "Los Angeles, CA", "Main Street"),
-        Address(3, "Jane Smith", "+44 20 7946 0958", "800 Elm Avenue", "London, UK", "Elm Avenue")
+        Address(2, "Kalyani Patil", "+91 9876543210", "Gangapur", "Kolhapur", "At Post Gangapur"),
+        Address(3, "Kalyaaniii", "+91 2929292929", "Gargoti", "Kolhapur", "Happi Streeeet")
     )
     var selectedAddress = mutableStateOf(savedAddresses.first())
 
     var cartItems = mutableStateListOf<CartItem>()
-
-    // THE FIX: This is now a mutable list to hold the dynamic "Upcoming" orders.
     var placedUpcomingOrders = mutableStateListOf<UpcomingOrder>()
 
     val featuredRestaurants = listOf(
@@ -55,34 +52,35 @@ object DemoDataProvider {
         CategoryItemData("veggie_supreme", "Veggie Supreme", "Bell peppers, olives, mushrooms", 11.25f, 4.4f, 29, R.drawable.pizza_4)
     )
 
-    // THE FIX: This is the single, correct definition for historyOrders.
     val historyOrders = listOf(
         HistoryOrder("264099", "McDonald’s", 2, "2025-07-25", 22.50f, "Delivered", R.drawable.chicken_hawaiian),
         HistoryOrder("264098", "Pizza Hut", 1, "2025-07-20", 15.30f, "Delivered", R.drawable.chicken_hawaiian)
     )
 
+    // --- ADD THIS LIST OF REVIEWS ---
+    val reviews = listOf(
+        Review(1, "Alyce Lambo", 5.0, "25 Jun 2025", "Really convenient and the points system helps benefit loyalty. Some mild glitches here and there, but nothing too egregious.", R.drawable.image_13),
+        Review(2, "Gonela Solom", 4.5, "22 Jun 2025", "Been a life saver for keeping our sanity during the pandemic, although they could improve some of their ui and how they handle specials as it often is unclear how to use them or everything is sold out so fast it feels a bit bait and switch.", R.drawable.image_13_1),
+        Review(3, "Brian C", 2.5, "21 Jun 2025", "Got an intro offer of 50% off first order that did not work..... I have scaled the app to find a contact us button but only a spend with us button available.", R.drawable.image_13_1),
+        Review(4, "Helsmar E", 3.5, "20 Jun 2025", "Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis. Amet minim mollit non deserunt ullamco est sit.", R.drawable.image_13)
+    )
 
     // --- UTILITY FUNCTIONS ---
 
     fun placeOrder(): UpcomingOrder? {
         if (cartItems.isEmpty()) return null
-
         val restaurantName = "Your Favorite Restaurant" // Placeholder
-        // THE FIX: Correctly calculates the new ID.
         val newOrderId = (placedUpcomingOrders.size + historyOrders.size + 1000).toString()
-
         val newOrder = UpcomingOrder(
             id = newOrderId,
             restaurant = restaurantName,
             items = cartItems.toList(),
             status = "Food on the way",
             eta = 25,
-            imageRes = cartItems.firstOrNull()?.imageRes ?: R.drawable.image_13 // Use first item's image
+            imageRes = cartItems.firstOrNull()?.imageRes ?: R.drawable.image_13
         )
-
         placedUpcomingOrders.add(newOrder)
         cartItems.clear()
-
         return newOrder
     }
 
@@ -90,7 +88,6 @@ object DemoDataProvider {
         val allItems = popularItems.map { FoodItemDetails(it.id, it.name, "From ${it.restaurantName}", it.price, it.imageRes, 4.5f, 50) } +
                 categoryItems.map { FoodItemDetails(it.id, it.name, it.description, it.price, it.imageRes, it.rating, it.reviews) } +
                 featuredRestaurants.map { FoodItemDetails(it.id, it.name, it.description, 15.00f, it.imageRes, it.rating, 100) }
-
         return allItems.find { item -> item.id == id }
     }
 
@@ -111,12 +108,9 @@ object DemoDataProvider {
             }
         }
     }
-    // In ui/DemoDataProvider.kt, inside object DemoDataProvider
 
-    // --- ADD THIS FUNCTION ---
     fun addToCart(item: FoodItemDetails, quantity: Int, selectedAddOns: Set<AddOn>) {
         val existingItem = cartItems.find { it.id == item.id }
-
         if (existingItem != null) {
             val index = cartItems.indexOf(existingItem)
             cartItems[index] = existingItem.copy(quantity = existingItem.quantity + quantity)
@@ -134,6 +128,7 @@ object DemoDataProvider {
             )
         }
     }
+
     fun removeCartItem(item: CartItem) {
         cartItems.remove(item)
     }

@@ -20,16 +20,16 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.kalyani.appetito.R
 
+
 private enum class PaymentOption { CARD, UPI, NET_BANKING, COD }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CheckoutScreen(navController: NavHostController) {
     var selectedPaymentOption by remember { mutableStateOf(PaymentOption.CARD) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showAddressSheet by remember { mutableStateOf(false) }
 
-    // THE FIX: Get the state object from the provider.
     val selectedAddressState = DemoDataProvider.selectedAddress
     val addresses = DemoDataProvider.savedAddresses
     val cartItems = DemoDataProvider.cartItems
@@ -44,8 +44,17 @@ fun CheckoutScreen(navController: NavHostController) {
             topBar = {
                 TopAppBar(
                     title = { Text("Checkout", fontWeight = FontWeight.Bold) },
-                    navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    // CHANGE: Use theme colors
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
             },
             bottomBar = {
@@ -53,11 +62,15 @@ fun CheckoutScreen(navController: NavHostController) {
                     totalPrice = total,
                     onClick = {
                         DemoDataProvider.placeOrder()
-                        navController.navigate("order_success")
+                        navController.navigate("order_success") {
+                            // Clear back stack to prevent going back to checkout
+                            popUpTo("main_app") { inclusive = false }
+                        }
                     }
                 )
             },
-            containerColor = Color(0xFFF5F5F5)
+            // CHANGE: Use theme background color
+            containerColor = MaterialTheme.colorScheme.background
         ) { innerPadding ->
             LazyColumn(
                 modifier = Modifier.padding(innerPadding),
@@ -68,11 +81,12 @@ fun CheckoutScreen(navController: NavHostController) {
                     CheckoutSection(title = "Delivery Address") {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f)) {
-                                // THE FIX: Access the address properties via .value
-                                Text(selectedAddressState.value.fullAddress, fontWeight = FontWeight.SemiBold)
-                                Text(selectedAddressState.value.cityState, color = Color.Gray, fontSize = 14.sp)
+                                Text(selectedAddressState.value.fullAddress, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface)
+                                Text(selectedAddressState.value.cityState, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                             }
-                            TextButton(onClick = { showAddressSheet = true }) { Text("Change", color = Color(0xFFFE724C)) }
+                            TextButton(onClick = { showAddressSheet = true }) {
+                                Text("Change", color = MaterialTheme.colorScheme.primary)
+                            }
                         }
                     }
                 }
@@ -82,7 +96,7 @@ fun CheckoutScreen(navController: NavHostController) {
                             PriceRow(label = "Subtotal", value = subtotal)
                             PriceRow(label = "Tax and Fees", value = taxAndFees)
                             PriceRow(label = "Delivery", value = deliveryFee)
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceVariant)
                             PriceRow(label = "Total", value = total, isTotal = true)
                         }
                     }
@@ -91,9 +105,12 @@ fun CheckoutScreen(navController: NavHostController) {
                     CheckoutSection(title = "Payment Method") {
                         Column {
                             PaymentOptionRow(text = "Credit/Debit Card", iconRes = R.drawable.ic_credit_card, selected = selectedPaymentOption == PaymentOption.CARD, onClick = { selectedPaymentOption = PaymentOption.CARD })
-                            HorizontalDivider(); PaymentOptionRow(text = "UPI", iconRes = R.drawable.ic_upi, selected = selectedPaymentOption == PaymentOption.UPI, onClick = { selectedPaymentOption = PaymentOption.UPI })
-                            HorizontalDivider(); PaymentOptionRow(text = "Net Banking", iconRes = R.drawable.ic_net_banking, selected = selectedPaymentOption == PaymentOption.NET_BANKING, onClick = { selectedPaymentOption = PaymentOption.NET_BANKING })
-                            HorizontalDivider(); PaymentOptionRow(text = "Cash on Delivery", iconRes = R.drawable.ic_cash_on_delivery, selected = selectedPaymentOption == PaymentOption.COD, onClick = { selectedPaymentOption = PaymentOption.COD })
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            PaymentOptionRow(text = "UPI", iconRes = R.drawable.ic_upi, selected = selectedPaymentOption == PaymentOption.UPI, onClick = { selectedPaymentOption = PaymentOption.UPI })
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            PaymentOptionRow(text = "Net Banking", iconRes = R.drawable.ic_net_banking, selected = selectedPaymentOption == PaymentOption.NET_BANKING, onClick = { selectedPaymentOption = PaymentOption.NET_BANKING })
+                            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                            PaymentOptionRow(text = "Cash on Delivery", iconRes = R.drawable.ic_cash_on_delivery, selected = selectedPaymentOption == PaymentOption.COD, onClick = { selectedPaymentOption = PaymentOption.COD })
                         }
                     }
                 }
@@ -101,14 +118,18 @@ fun CheckoutScreen(navController: NavHostController) {
         }
 
         if (showAddressSheet) {
-            ModalBottomSheet(onDismissRequest = { showAddressSheet = false }, sheetState = sheetState) {
+            ModalBottomSheet(
+                onDismissRequest = { showAddressSheet = false },
+                sheetState = sheetState,
+                // CHANGE: Use theme colors for the sheet
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
                 AddressSheetContent(
                     addresses = addresses,
-                    // THE FIX: Pass the address object (the .value) to the sheet.
                     selectedAddress = selectedAddressState.value,
                     onAddressSelected = { newAddress ->
-                        // THE FIX: Update the .value of the state object.
                         selectedAddressState.value = newAddress
+                        // Consider using coroutine scope to hide the sheet smoothly
                         showAddressSheet = false
                     },
                     onAddNewAddress = {
@@ -121,19 +142,26 @@ fun CheckoutScreen(navController: NavHostController) {
     }
 }
 
-// All helper composables below are correct and do not need changes.
 @Composable
 fun PriceRow(label: String, value: Float, isTotal: Boolean = false) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(label, fontSize = 16.sp, color = if (isTotal) Color.Black else Color.Gray, fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal)
+        // CHANGE: Use theme colors
+        Text(
+            label,
+            fontSize = 16.sp,
+            color = if (isTotal) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            fontWeight = if (isTotal) FontWeight.Bold else FontWeight.Normal
+        )
         Spacer(modifier = Modifier.weight(1f))
         Text(
             "$${String.format("%.2f", value)}",
             fontSize = if (isTotal) 20.sp else 16.sp,
-            color = Color.Black,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = if (isTotal) FontWeight.Bold else FontWeight.SemiBold
         )
     }
@@ -142,10 +170,17 @@ fun PriceRow(label: String, value: Float, isTotal: Boolean = false) {
 @Composable
 private fun CheckoutSection(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column {
-        Text(title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 8.dp))
+        Text(
+            title,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 8.dp),
+            color = MaterialTheme.colorScheme.onBackground // CHANGE
+        )
         Card(
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            // CHANGE: Use theme surface color
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -158,13 +193,32 @@ private fun CheckoutSection(title: String, content: @Composable ColumnScope.() -
 @Composable
 private fun PaymentOptionRow(text: String, iconRes: Int, selected: Boolean, onClick: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(painter = painterResource(id = iconRes), contentDescription = text, tint = Color.Unspecified, modifier = Modifier.height(24.dp))
+        Icon(
+            painter = painterResource(id = iconRes),
+            contentDescription = text,
+            // Leaving tint Unspecified is correct for pre-colored brand icons.
+            tint = Color.Unspecified,
+            modifier = Modifier.height(24.dp)
+        )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(text, modifier = Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
-        RadioButton(selected = selected, onClick = onClick, colors = RadioButtonDefaults.colors(selectedColor = Color(0xFFFE724C)))
+        Text(
+            text,
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface // CHANGE
+        )
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            // CHANGE: Use theme primary color
+            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
+        )
     }
 }
 
@@ -174,18 +228,30 @@ private fun PlaceOrderBar(totalPrice: Float, onClick: () -> Unit) {
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        // CHANGE: Use theme surface color
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("Total", fontSize = 14.sp, color = Color.Gray)
-                Text(text = "$${String.format("%.2f", totalPrice)}", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Text("Total", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) // CHANGE
+                Text(
+                    text = "$${String.format("%.2f", totalPrice)}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface // CHANGE
+                )
             }
             Button(
                 onClick = onClick,
-                modifier = Modifier.height(52.dp).padding(start = 16.dp),
+                modifier = Modifier
+                    .height(52.dp)
+                    .padding(start = 16.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+                // CHANGE: Use theme colors for button
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
                 Text("PLACE ORDER", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
@@ -193,8 +259,26 @@ private fun PlaceOrderBar(totalPrice: Float, onClick: () -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
+
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Checkout Screen - Light")
 @Composable
-fun CheckoutScreenPreview() {
-    CheckoutScreen(navController = rememberNavController())
+fun CheckoutScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        CheckoutScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Checkout Screen - Dark")
+@Composable
+fun CheckoutScreenPreviewDark() {
+    // Add some items to the cart for a more realistic dark mode preview
+    DemoDataProvider.cartItems.clear()
+    DemoDataProvider.cartItems.add(
+        CartItem(id = "cheese_burger", name = "Cheese Burger", description = "Classic beef burger", price = 5.50f, quantity = 2, imageRes = R.drawable.img_burger)
+    )
+    AppetitoTheme(useDarkTheme = true) {
+        CheckoutScreen(navController = rememberNavController())
+    }
 }

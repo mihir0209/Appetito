@@ -14,7 +14,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,13 +27,15 @@ import androidx.navigation.compose.rememberNavController
 fun AddNewAddressScreen(
     navController: NavHostController
 ) {
+    // State management for form fields and editing logic remains the same.
     var fullName by remember { mutableStateOf("") }
     var mobileNumber by remember { mutableStateOf("") }
     var state by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var street by remember { mutableStateOf("") }
     var editingAddressId by remember { mutableStateOf<Int?>(null) }
-    val savedAddresses = DemoDataProvider.savedAddresses
+    // This is using a mutable list, which is fine for this example.
+    val savedAddresses = remember { DemoDataProvider.savedAddresses }
 
     fun populateFieldsForEdit(address: Address) {
         editingAddressId = address.id
@@ -54,33 +55,72 @@ fun AddNewAddressScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Manage Addresses", fontWeight = FontWeight.Bold) },
-                navigationIcon = { IconButton(onClick = { navController.popBackStack() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White, titleContentColor = Color.Black)
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                // CHANGE: Use theme colors for awareness.
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
-        containerColor = Color(0xFFF9F9F9)
+        // CHANGE: Use theme's background color.
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
-            modifier = Modifier.padding(innerPadding).padding(16.dp).verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("Saved Addresses", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-            Card(colors = CardDefaults.cardColors(containerColor = Color.White)) {
+            Text(
+                "Saved Addresses",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onBackground // Use theme color
+            )
+            Card(
+                // CHANGE: Use theme surface color for card background.
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     savedAddresses.forEach { address ->
                         AddressRow(address = address, onEdit = { populateFieldsForEdit(address) })
                     }
                 }
             }
-            OutlinedButton(onClick = { clearFieldsForNew() }, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFFE724C))) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = Color(0xFFFE724C))
+            OutlinedButton(
+                onClick = { clearFieldsForNew() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                // CHANGE: Use primary color for border.
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+            ) {
+                // CHANGE: Use primary color for icon tint.
+                Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Add New Address", color = Color(0xFFFE724C), fontWeight = FontWeight.Bold)
+                // CHANGE: Use primary color for text.
+                Text("Add New Address", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant // Use theme color
+            )
+            // The form visibility logic remains the same.
             AnimatedVisibility(visible = true) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(text = if (editingAddressId == null) "Add a New Address" else "Edit Address", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = if (editingAddressId == null) "Add a New Address" else "Edit Address",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onBackground // Use theme color
+                    )
+                    // Custom text fields now use theme colors internally.
                     AddressTextField(label = "Full Name", value = fullName, onValueChange = { fullName = it })
                     AddressTextField(label = "Mobile Number", value = mobileNumber, onValueChange = { mobileNumber = it }, keyboardType = KeyboardType.Phone)
                     AddressTextField(label = "State", value = state, onValueChange = { state = it })
@@ -89,19 +129,27 @@ fun AddNewAddressScreen(
                     Button(
                         onClick = {
                             if (editingAddressId == null) {
-                                val newId = (DemoDataProvider.savedAddresses.maxOfOrNull { it.id } ?: 0) + 1
+                                val newId = (savedAddresses.maxOfOrNull { it.id } ?: 0) + 1
                                 val newAddress = Address(id = newId, fullName = fullName, mobileNumber = mobileNumber, street = street, cityState = "$city, $state", fullAddress = "$street, $city")
-                                DemoDataProvider.savedAddresses.add(newAddress)
-                                // THE FIX: Assign the new address to the .value of the state holder.
+                                savedAddresses.add(newAddress)
                                 DemoDataProvider.selectedAddress.value = newAddress
                             } else { /* TODO: Implement update logic */ }
                             navController.popBackStack()
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+                        // CHANGE: Use theme colors for the button.
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text(text = if (editingAddressId == null) "SAVE ADDRESS" else "UPDATE ADDRESS", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(
+                            text = if (editingAddressId == null) "SAVE ADDRESS" else "UPDATE ADDRESS",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            // CHANGE: Use theme color for text on button.
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }
@@ -118,11 +166,19 @@ private fun AddressRow(address: Address, onEdit: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {
-            Text(address.fullName, fontWeight = FontWeight.Bold)
-            Text(address.fullAddress, color = Color.Gray)
+            Text(
+                address.fullName,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface // Use theme color
+            )
+            Text(
+                address.fullAddress,
+                color = MaterialTheme.colorScheme.onSurfaceVariant // Use subtler theme color
+            )
         }
         TextButton(onClick = onEdit) {
-            Text("Edit", color = Color(0xFFFE724C))
+            // CHANGE: Use primary color for the text button.
+            Text("Edit", color = MaterialTheme.colorScheme.primary)
         }
     }
 }
@@ -141,18 +197,32 @@ private fun AddressTextField(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        // CHANGE: Use theme colors for the text field states.
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = Color(0xFFFE724C),
-            unfocusedBorderColor = Color.LightGray,
-            cursorColor = Color(0xFFFE724C),
-            focusedLabelColor = Color(0xFFFE724C)
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedLabelColor = MaterialTheme.colorScheme.primary
+            // Other colors like text and label color will be inherited from the theme.
         ),
         singleLine = true
     )
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Add Address Screen Light")
 @Composable
 fun AddNewAddressScreenPreview() {
-    AddNewAddressScreen(navController = rememberNavController())
+    AppetitoTheme(useDarkTheme = false) {
+        AddNewAddressScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Add Address Screen Dark")
+@Composable
+fun AddNewAddressScreenDarkPreview() {
+    AppetitoTheme(useDarkTheme = true) {
+        AddNewAddressScreen(navController = rememberNavController())
+    }
 }

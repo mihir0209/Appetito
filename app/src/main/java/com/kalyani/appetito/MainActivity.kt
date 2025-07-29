@@ -5,8 +5,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -14,7 +18,6 @@ import ui.*
 
 @Composable
 fun AppetitoApp() {
-    SystemAppearance(isLight = true)
     val navController = rememberNavController()
 
     NavHost(
@@ -32,7 +35,7 @@ fun AppetitoApp() {
         composable("main_app") { MainWithBottomNav(mainNavController = navController) }
         composable("orders") { MyOrdersUpcomingScreen(navController = navController) }
         composable("add_address") { AddNewAddressScreen(navController = navController) }
-        composable("reviews") { ReviewsScreen() }
+        composable("reviews") { ReviewsScreen(navController = navController) }
         composable("review_restaurant") { ReviewRestaurantScreen(navController = navController) }
         composable("rating") { RatingScreen(navController = navController) }
         composable("food_details/{itemId}") { backStackEntry -> val itemId = backStackEntry.arguments?.getString("itemId"); FoodDetailsScreen(itemId = itemId, navController = navController) }
@@ -51,7 +54,24 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            AppetitoApp()
+            // THE FIX: The entire app is now wrapped in our theme.
+            val context = LocalContext.current
+            val themeViewModel: ThemeViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    return ThemeViewModel(context) as T
+                }
+            })
+            val currentTheme by themeViewModel.theme
+
+            val useDarkTheme = when (currentTheme) {
+                Theme.Light -> false
+                Theme.Dark -> true
+                Theme.System -> isSystemInDarkTheme()
+            }
+
+            AppetitoTheme(useDarkTheme = useDarkTheme) {
+                AppetitoApp()
+            }
         }
     }
 }

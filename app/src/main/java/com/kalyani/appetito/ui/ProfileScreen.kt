@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -22,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -39,8 +39,9 @@ fun ProfileScreen(
     mainNavController: NavHostController
 ) {
     var showContent by remember { mutableStateOf(false) }
+    // CHANGE: Reduced animation delay
     LaunchedEffect(Unit) {
-        delay(200)
+        delay(100)
         showContent = true
     }
 
@@ -49,16 +50,16 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            // CHANGE: Use theme background color
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
     ) {
-        // --- Header Section ---
         ProfileHeader(user = user, showContent = showContent)
 
-        // --- Main Content Section with Cards ---
         AnimatedVisibility(
             visible = showContent,
-            enter = fadeIn(animationSpec = tween(durationMillis = 600, delayMillis = 200)),
+            // CHANGE: Reduced animation duration
+            enter = fadeIn(animationSpec = tween(durationMillis = 500, delayMillis = 150)),
             exit = fadeOut(animationSpec = tween())
         ) {
             Column(
@@ -68,54 +69,31 @@ fun ProfileScreen(
                 // Account Information Card
                 Card(
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    // CHANGE: Use theme surface color
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        ProfileInfoRow(
-                            icon = R.drawable.ic_profile,
-                            label = "Full Name",
-                            value = user.name
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileInfoRow(
-                            icon = R.drawable.ic_message,
-                            label = "E-mail",
-                            value = user.email
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileInfoRow(
-                            icon = R.drawable.ic_phone, // Example icon
-                            label = "Phone Number",
-                            value = user.phone
-                        )
+                        ProfileInfoRow(icon = R.drawable.ic_profile, label = "Full Name", value = user.name)
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+                        ProfileInfoRow(icon = R.drawable.ic_message, label = "E-mail", value = user.email)
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+                        ProfileInfoRow(icon = R.drawable.ic_phone, label = "Phone Number", value = user.phone)
                     }
                 }
 
                 // General Options Card
                 Card(
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                        ProfileOptionRow(
-                            icon = R.drawable.ic_order,
-                            text = "My Orders",
-                            onClick = { mainNavController.navigate("orders") }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileOptionRow(
-                            icon = R.drawable.ic_location,
-                            text = "Delivery Addresses",
-                            onClick = { mainNavController.navigate("add_address") }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        ProfileOptionRow(
-                            icon = R.drawable.ic_settings,
-                            text = "Settings",
-                            onClick = { /* mainNavController.navigate("settings") */ }
-                        )
+                        ProfileOptionRow(icon = R.drawable.ic_order, text = "My Orders", onClick = { mainNavController.navigate("orders") })
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+                        ProfileOptionRow(icon = R.drawable.ic_location, text = "Delivery Addresses", onClick = { mainNavController.navigate("add_address") })
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.surfaceVariant)
+                        ProfileOptionRow(icon = R.drawable.ic_settings, text = "Settings", onClick = { mainNavController.navigate("settings") })
                     }
                 }
 
@@ -123,16 +101,14 @@ fun ProfileScreen(
                 OutlinedButton(
                     onClick = { /* TODO: Handle Logout */ },
                     shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.Red.copy(alpha = 0.5f)),
+                    // CHANGE: Use theme error color for border
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = "Log Out",
-                        tint = Color.Red
-                    )
+                    // CHANGE: Use theme error color
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Log Out", tint = MaterialTheme.colorScheme.error)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Log Out", color = Color.Red, fontWeight = FontWeight.Bold)
+                    Text(text = "Log Out", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -145,7 +121,8 @@ private fun ProfileHeader(user: DemoUser, showContent: Boolean) {
         modifier = Modifier
             .fillMaxWidth()
             .background(
-                color = Color(0xFFFE724C),
+                // CHANGE: Use theme primary color
+                color = MaterialTheme.colorScheme.primary,
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
             )
             .padding(top = 40.dp, bottom = 32.dp),
@@ -154,36 +131,31 @@ private fun ProfileHeader(user: DemoUser, showContent: Boolean) {
     ) {
         AnimatedVisibility(
             visible = showContent,
-            enter = fadeIn(tween(600)) + androidx.compose.animation.scaleIn(tween(600)),
+            // CHANGE: Reduced animation duration
+            enter = fadeIn(tween(500)) + scaleIn(tween(500)),
             exit = fadeOut()
         ) {
             Image(
-                painter = painterResource(id = R.drawable.image_13), // Using the user's image
+                painter = painterResource(id = user.profileImageRes),
                 contentDescription = "Profile Picture",
                 modifier = Modifier
                     .size(100.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color.White, CircleShape),
+                    // CHANGE: Use theme surface color for border
+                    .border(2.dp, MaterialTheme.colorScheme.surface, CircleShape),
                 contentScale = ContentScale.Crop
             )
         }
 
         AnimatedVisibility(
             visible = showContent,
-            enter = fadeIn(tween(600, 200))
+            // CHANGE: Reduced animation duration and delay
+            enter = fadeIn(tween(500, 100))
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = user.name,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = user.email,
-                    fontSize = 16.sp,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
+                // CHANGE: Use onPrimary color for text on primary background
+                Text(text = user.name, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                Text(text = user.email, fontSize = 16.sp, color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f))
             }
         }
     }
@@ -200,22 +172,14 @@ private fun ProfileInfoRow(icon: Int, label: String, value: String) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = label,
-            tint = Color(0xFFFE724C),
+            // CHANGE: Use theme primary color for icon
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(24.dp)
         )
         Spacer(modifier = Modifier.width(16.dp))
         Column {
-            Text(
-                text = label,
-                fontSize = 12.sp,
-                color = Color.Gray
-            )
-            Text(
-                text = value,
-                fontSize = 16.sp,
-                color = Color.Black,
-                fontWeight = FontWeight.SemiBold
-            )
+            Text(text = label, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(text = value, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.SemiBold)
         }
     }
 }
@@ -232,26 +196,35 @@ private fun ProfileOptionRow(icon: Int, text: String, onClick: () -> Unit) {
         Icon(
             painter = painterResource(id = icon),
             contentDescription = text,
-            tint = Color.Gray
+            // CHANGE: Use onSurfaceVariant for icon
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = text,
-            fontSize = 16.sp,
-            color = Color.Black,
-            modifier = Modifier.weight(1f)
-        )
+        Text(text = text, fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
-            tint = Color.Gray.copy(alpha = 0.7f)
+            // CHANGE: Use onSurfaceVariant for icon
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         )
     }
 }
 
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Profile Screen - Light")
 @Composable
-fun ProfileScreenPreview() {
-    ProfileScreen(mainNavController = rememberNavController())
+fun ProfileScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        ProfileScreen(mainNavController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Profile Screen - Dark")
+@Composable
+fun ProfileScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        ProfileScreen(mainNavController = rememberNavController())
+    }
 }

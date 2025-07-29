@@ -7,57 +7,59 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 @Composable
 fun VerificationCodeScreen(
     onVerify: () -> Unit,
     onResend: () -> Unit
 ) {
-    val code1 = remember { mutableStateOf("") }
-    val code2 = remember { mutableStateOf("") }
-    val code3 = remember { mutableStateOf("") }
-    val code4 = remember { mutableStateOf("") }
+    val code = remember { mutableStateListOf("", "", "", "") }
+    val focusRequesters = remember { List(4) { FocusRequester() } }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+        delay(300) // Slight delay to allow UI to settle
+        focusRequesters[0].requestFocus()
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // Decorative Circles
         Box(
             modifier = Modifier
                 .size(96.dp)
                 .offset(x = (-46).dp, y = (-21).dp)
-                .border(36.dp, Color(0xFFFE724C), CircleShape)
+                .border(36.dp, MaterialTheme.colorScheme.primary, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(165.dp)
                 .offset(x = (-5).dp, y = (-99).dp)
-                .background(Color(0xFFFFECE7), CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(181.dp)
                 .offset(x = 298.dp, y = (-109).dp)
-                .background(Color(0xFFFE724C), CircleShape)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
 
         Column(
@@ -72,13 +74,13 @@ fun VerificationCodeScreen(
                 "Verification Code",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 "Please type the verification code sent to your email.",
-                color = Color(0xFF9796A1),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -89,11 +91,22 @@ fun VerificationCodeScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                val codeFieldModifier = Modifier.width(60.dp)
-                CodeTextField(value = code1.value, onValueChange = { code1.value = it }, modifier = codeFieldModifier)
-                CodeTextField(value = code2.value, onValueChange = { code2.value = it }, modifier = codeFieldModifier)
-                CodeTextField(value = code3.value, onValueChange = { code3.value = it }, modifier = codeFieldModifier)
-                CodeTextField(value = code4.value, onValueChange = { code4.value = it }, modifier = codeFieldModifier)
+                for (i in 0..3) {
+                    CodeTextField(
+                        value = code[i],
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 1) {
+                                code[i] = newValue
+                                if (newValue.isNotEmpty() && i < 3) {
+                                    focusRequesters[i + 1].requestFocus()
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .width(60.dp)
+                            .focusRequester(focusRequesters[i])
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -102,10 +115,10 @@ fun VerificationCodeScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("I don’t receive a code! ", color = Color(0xFF5B5B5E), fontSize = 16.sp)
+                Text("I don’t receive a code! ", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
                 Text(
                     "Please resend",
-                    color = Color(0xFFFE724C),
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clickable { onResend() }
@@ -117,12 +130,12 @@ fun VerificationCodeScreen(
             Button(
                 onClick = onVerify,
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .height(60.dp)
                     .width(248.dp)
             ) {
-                Text("VERIFY", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("VERIFY", color = MaterialTheme.colorScheme.onPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
 
             Spacer(modifier = Modifier.height(80.dp))
@@ -138,28 +151,36 @@ private fun CodeTextField(
 ) {
     OutlinedTextField(
         value = value,
-        onValueChange = { if (it.length <= 1) onValueChange(it) },
+        onValueChange = onValueChange,
         modifier = modifier,
         singleLine = true,
         shape = RoundedCornerShape(12.dp),
-        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontSize = 24.sp),
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Color(0xFFFE724C),
-            unfocusedIndicatorColor = Color(0xFFEEEEEE),
-            focusedTextColor = Color(0xFF111719),
-            unfocusedTextColor = Color(0xFF111719),
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color(0xFFF9F9F9),
+        textStyle = LocalTextStyle.current.copy(textAlign = TextAlign.Center, fontSize = 24.sp, fontWeight = FontWeight.Bold),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+            unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
         )
     )
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, name = "Verification Code - Light")
 @Composable
-fun VerificationCodeScreenPreview() {
-    VerificationCodeScreen(
-        onVerify = {},
-        onResend = {}
-    )
+fun VerificationCodeScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        VerificationCodeScreen(onVerify = {}, onResend = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Verification Code - Dark")
+@Composable
+fun VerificationCodeScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        VerificationCodeScreen(onVerify = {}, onResend = {})
+    }
 }

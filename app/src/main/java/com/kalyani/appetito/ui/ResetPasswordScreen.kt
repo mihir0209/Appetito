@@ -5,11 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,25 +26,30 @@ fun ResetPasswordScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
+            // CHANGE: Use theme background color
+            .background(MaterialTheme.colorScheme.background)
     ) {
+        // --- Decorative Circles (Theme-Aware) ---
         Box(
             modifier = Modifier
                 .size(96.dp)
                 .offset(x = (-46).dp, y = (-21).dp)
-                .border(36.dp, Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .border(36.dp, MaterialTheme.colorScheme.primary, CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(165.dp)
                 .offset(x = (-5).dp, y = (-99).dp)
-                .background(Color(0xFFFFECE7), CircleShape)
+                // CHANGE: Use a subtle, theme-aware version of the primary color
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
         )
         Box(
             modifier = Modifier
                 .size(181.dp)
                 .offset(x = 298.dp, y = (-109).dp)
-                .background(Color(0xFFFE724C), CircleShape)
+                // CHANGE: Use theme primary color
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
         )
 
         Column(
@@ -64,7 +65,8 @@ fun ResetPasswordScreen(
                 "Reset Password",
                 fontSize = 36.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
+                // CHANGE: Use onBackground for title
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.height(16.dp))
@@ -72,7 +74,8 @@ fun ResetPasswordScreen(
             // Description
             Text(
                 "Please enter your email address to request a password reset",
-                color = Color(0xFF9796A1),
+                // CHANGE: Use onSurfaceVariant for description
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontSize = 14.sp,
                 lineHeight = 20.sp,
                 modifier = Modifier.fillMaxWidth()
@@ -84,15 +87,17 @@ fun ResetPasswordScreen(
             OutlinedTextField(
                 value = email.value,
                 onValueChange = { email.value = it },
-                label = { Text("E-mail", color = Color(0xFF9796A1), fontSize = 16.sp) },
+                label = { Text("E-mail", fontSize = 16.sp) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color(0xFFFE724C),
-                    unfocusedIndicatorColor = Color(0xFFEEEEEE),
-                    focusedTextColor = Color(0xFF111719),
-                    unfocusedTextColor = Color(0xFF111719),
+                // CHANGE: Use theme-aware colors for text field
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    cursorColor = MaterialTheme.colorScheme.primary,
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent
                 )
@@ -103,20 +108,36 @@ fun ResetPasswordScreen(
             Button(
                 onClick = onSendNewPassword,
                 shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C)),
+                // CHANGE: Use theme colors for button
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 modifier = Modifier
                     .height(60.dp)
                     .width(248.dp)
             ) {
-                Text("SEND", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text("SEND", fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Reset Password - Light")
 @Composable
-fun ResetPasswordScreenPreview() {
-    ResetPasswordScreen(onSendNewPassword = {})
+fun ResetPasswordScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        ResetPasswordScreen(onSendNewPassword = {})
+    }
+}
+
+@Preview(showBackground = true, name = "Reset Password - Dark")
+@Composable
+fun ResetPasswordScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        ResetPasswordScreen(onSendNewPassword = {})
+    }
 }

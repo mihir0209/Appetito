@@ -3,7 +3,6 @@ package ui
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,9 +16,10 @@ fun AppetitoBottomNavBar(
     navController: NavController
 ) {
     NavigationBar(
-        containerColor = Color.White,
-        contentColor = Color(0xFF9796A1), // Default color for unselected items
-        tonalElevation = 8.dp
+        // CHANGE: Use theme's surface color for the container.
+        containerColor = MaterialTheme.colorScheme.surface,
+        // The content color will be determined by the NavigationBarItem colors.
+        tonalElevation = 8.dp // Elevation can remain for a shadow effect.
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -30,6 +30,7 @@ fun AppetitoBottomNavBar(
                 onClick = {
                     if (currentRoute != tab.route) {
                         navController.navigate(tab.route) {
+                            // Standard navigation logic to prevent building up a large back stack.
                             popUpTo(navController.graph.startDestinationId)
                             launchSingleTop = true
                         }
@@ -42,18 +43,21 @@ fun AppetitoBottomNavBar(
                     )
                 },
                 label = { Text(tab.label) },
+                // CHANGE: Use theme colors for all item states.
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = Color(0xFFFE724C),
-                    selectedTextColor = Color(0xFFFE724C),
-                    unselectedIconColor = Color.Gray,
-                    unselectedTextColor = Color.Gray,
-                    indicatorColor = Color.Transparent
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Keeping the indicator transparent as per the original design.
+                    indicatorColor = MaterialTheme.colorScheme.surface
                 )
             )
         }
     }
 }
 
+// Enum remains unchanged as it defines the static properties of the tabs.
 enum class BottomNavTab(val route: String, val label: String, val iconRes: Int) {
     Home("home_route", "Home", R.drawable.ic_home),
     Category("category_route", "Category", R.drawable.ic_category),
@@ -62,9 +66,22 @@ enum class BottomNavTab(val route: String, val label: String, val iconRes: Int) 
     Profile("profile_route", "Profile", R.drawable.ic_profile)
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Bottom Nav Bar - Light Theme")
 @Composable
-fun AppetitoBottomNavBarPreview() {
-    val dummyNavController = rememberNavController()
-    AppetitoBottomNavBar(navController = dummyNavController)
+fun AppetitoBottomNavBarPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        val dummyNavController = rememberNavController()
+        AppetitoBottomNavBar(navController = dummyNavController)
+    }
+}
+
+@Preview(showBackground = true, name = "Bottom Nav Bar - Dark Theme")
+@Composable
+fun AppetitoBottomNavBarPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        val dummyNavController = rememberNavController()
+        AppetitoBottomNavBar(navController = dummyNavController)
+    }
 }

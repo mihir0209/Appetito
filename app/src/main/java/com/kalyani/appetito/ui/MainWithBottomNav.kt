@@ -16,6 +16,9 @@ fun MainWithBottomNav(
 ) {
     val nestedNavController = rememberNavController()
 
+    // The Scaffold correctly uses the theme's background color by default.
+    // The AppetitoBottomNavBar has already been made theme-aware.
+    // No color changes are needed here.
     Scaffold(
         bottomBar = { AppetitoBottomNavBar(navController = nestedNavController) }
     ) { innerPadding ->
@@ -33,7 +36,6 @@ fun MainWithBottomNav(
             composable(BottomNavTab.Cart.route) {
                 CartScreen(nestedNavController = nestedNavController, mainNavController = mainNavController)
             }
-
             composable(BottomNavTab.Favorites.route) {
                 FavoritesFoodItemsScreen(nestedNavController = nestedNavController)
             }
@@ -44,8 +46,22 @@ fun MainWithBottomNav(
     }
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Main Layout - Light Theme")
 @Composable
-fun MainWithBottomNavPreview() {
-    MainWithBottomNav(mainNavController = rememberNavController())
+fun MainWithBottomNavPreviewLight() {
+    // CHANGE: Wrap preview in the theme to see it correctly.
+    AppetitoTheme(useDarkTheme = false) {
+        MainWithBottomNav(mainNavController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Main Layout - Dark Theme")
+@Composable
+fun MainWithBottomNavPreviewDark() {
+    // CHANGE: Add a dark theme preview.
+    AppetitoTheme(useDarkTheme = true) {
+        MainWithBottomNav(mainNavController = rememberNavController())
+    }
 }

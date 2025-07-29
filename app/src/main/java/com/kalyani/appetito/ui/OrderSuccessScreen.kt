@@ -5,12 +5,12 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,28 +38,36 @@ fun OrderSuccessScreen(navController: NavHostController) {
         label = "SuccessImageScale"
     )
 
+    // The Column will use the Scaffold's background color, which is theme-aware.
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Image(
             painter = painterResource(id = R.drawable.ic_order_success),
             contentDescription = "Order Successful",
-            modifier = Modifier.size(150.dp).scale(scale)
+            modifier = Modifier
+                .size(150.dp)
+                .scale(scale)
         )
         Spacer(modifier = Modifier.height(32.dp))
+        // Text color will be inherited from the theme's onBackground/onSurface color.
         Text(
             "Thank You!",
             fontSize = 32.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onBackground
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             "Your Order has been placed successfully. You can track the delivery in the 'My Orders' section.",
             fontSize = 16.sp,
             textAlign = TextAlign.Center,
-            color = Color.Gray
+            // CHANGE: Use onSurfaceVariant for secondary text.
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(40.dp))
         Button(
@@ -70,16 +78,34 @@ fun OrderSuccessScreen(navController: NavHostController) {
                     }
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(52.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFE724C))
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            // CHANGE: Use theme colors for the button.
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Text("BACK TO HOME", fontWeight = FontWeight.Bold)
         }
     }
 }
 
-@Preview(showBackground = true)
+// --- Previews ---
+
+@Preview(showBackground = true, name = "Order Success - Light")
 @Composable
-fun OrderSuccessScreenPreview() {
-    OrderSuccessScreen(navController = rememberNavController())
+fun OrderSuccessScreenPreviewLight() {
+    AppetitoTheme(useDarkTheme = false) {
+        OrderSuccessScreen(navController = rememberNavController())
+    }
+}
+
+@Preview(showBackground = true, name = "Order Success - Dark")
+@Composable
+fun OrderSuccessScreenPreviewDark() {
+    AppetitoTheme(useDarkTheme = true) {
+        OrderSuccessScreen(navController = rememberNavController())
+    }
 }
