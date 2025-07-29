@@ -14,6 +14,7 @@ import ui.*
 
 @Composable
 fun AppetitoApp() {
+    SystemAppearance(isLight = true)
     val navController = rememberNavController()
 
     NavHost(
