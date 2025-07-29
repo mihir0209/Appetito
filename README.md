@@ -12,11 +12,11 @@ Welcome to Appetito, a modern food delivery application UI built entirely with J
 
 **Animated Side Menu & Navigation GIF:**
 
-![Demo_Video](https://drive.google.com/file/d/1Piz-pfCeEZfgs6J4CYrJdIjC0ALnMhb_/view?usp=sharing)
+[Click here to watch the demo](https://drive.google.com/file/d/1Piz-pfCeEZfgs6J4CYrJdIjC0ALnMhb_/view?usp=sharing)
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 This project is a comprehensive demonstration of building a feature-rich UI in Jetpack Compose.
 
